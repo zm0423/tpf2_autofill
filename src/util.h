@@ -38,7 +38,7 @@ struct my_data
     bool easy_if{true};
     bool xls_if{true};
     bool invalid_if{};
-    int clear_if{};
+    int clear_if{1};
     bool pile_if{};
 };
 
