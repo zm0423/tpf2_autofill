@@ -1,0 +1,86 @@
+# ============ Qt 特定文件 ============
+# Qt Creator 配置文件
+*.pro.user
+*.pro.user.*
+*.includes
+*.config
+*.creator
+*.files
+*.cflags
+*.cxxflags
+*.config
+
+# Qt 构建目录
+build-*/
+build/
+*-Build/
+*.build/
+Debug/
+Release/
+debug/
+release/
+
+# Qt 编译生成的中间文件
+Makefile*
+*.o
+*.obj
+*.moc
+moc_*.cpp
+moc_*.h
+qrc_*.cpp
+ui_*.h
+
+# Qt 临时文件
+*.qm
+*.qrc
+*.qmlc
+*.jsc
+
+# ============ CMake 构建文件 ============
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
+CTestTestfile.cmake
+*.cmake
+
+# ============ IDE 配置文件 ============
+# Qt Creator
+.qtcreator/
+.qtcreator/*
+
+# VS Code
+.vscode/
+.vscode/*
+
+# Visual Studio
+.vs/
+*.vcxproj
+*.vcxproj.filters
+*.vcxproj.user
+*.sln
+*.suo
+*.db
+
+# CLion
+.idea/
+*.iml
+
+# ============ 编译输出文件 ============
+# Windows
+*.exe
+*.dll
+*.lib
+*.pdb
+*.ilk
+*.exp
+
+# macOS
+*.app
+*.dylib
+*.framework
+
+# Linux
+*.so
+*.a
+*.out
