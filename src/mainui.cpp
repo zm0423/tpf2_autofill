@@ -43,6 +43,7 @@ mainui::mainui(QWidget *parent)
     m_clearGroup->addButton(ui->clear_1, 1);
     m_clearGroup->addButton(ui->clear_2, 2);
     m_clearGroup->addButton(ui->clear_3, 3);
+    setWindowTitle("狂热运输2 时刻表自动输入");
 
     QObject::connect(m_easyGroup, &QButtonGroup::idClicked,
                      this, [&](int p) {
@@ -149,10 +150,10 @@ void mainui::init()
 
             doc.write(1, 1, "线路");
             doc.write(1, 2, "文件1");
-            doc.write(1, 3, "表单名称（全部都要就空着，否则以空格分隔）");
+            doc.write(1, 3, "表单名称");
             doc.write(1, 4, "文件2");
             doc.write(1, 5, "表单名称");
-            doc.write(1, 6, "...（如有请继续，第一行请随意更改）");
+            doc.write(1, 6, "...");
 
             doc.saveAs(stq((sdata.folder_dir / (sdata.sg_name + "_list.xlsx")).u8string()));
 
@@ -206,7 +207,9 @@ void mainui::on_input_data_clicked()
     }
     data_add *adding = new data_add(sdata);
     adding->setAttribute(Qt::WA_DeleteOnClose);
+    connect(adding, &data_add::destroyed, this, &mainui::refresh);
     adding->show();
+
 
     refresh();
 
@@ -216,6 +219,7 @@ void mainui::on_input_data_clicked()
 void mainui::on_sync_all_data_clicked()
 {
     refresh_file(sdata);
+    read_station_line();
     std::vector<std::pair<int, std::vector<std::pair<QString, QString>>>> lists;
 
     if(!get_list(lists))
@@ -251,7 +255,7 @@ bool mainui::get_folder()
     if(folder.empty())
         return 0;
 
-    std::string folder_name = sdata.folder_dir.stem().u8string();
+    std::string folder_name = folder.stem().u8string();
 
     sdata = {};
 
@@ -298,10 +302,10 @@ bool mainui::get_sg()
 
         doc.write(1, 1, "线路");
         doc.write(1, 2, "文件1");
-        doc.write(1, 3, "表单名称（全部都要就空着，否则以空格分隔）");
+        doc.write(1, 3, "表单名称");
         doc.write(1, 4, "文件2");
         doc.write(1, 5, "表单名称");
-        doc.write(1, 6, "...（如有请继续，第一行请随意更改）");
+        doc.write(1, 6, "...");
 
         doc.saveAs(stq((sdata.folder_dir / (sdata.sg_name + "_list.xlsx")).u8string()));
 
@@ -320,6 +324,7 @@ bool mainui::get_sg()
 
     refresh();
     refresh_file(sdata);
+
 
 
     return 1;
@@ -1068,6 +1073,7 @@ const QString about = "作者：今天学高代了吗<br/>"
                       "https://www.bilibili.com/video/BV1yj2ABwE9v</a> <br/>"
                       "github：<a href=\"https://github.com/zm0423/tpf2_autofill\"> "
                       "https://github.com/zm0423/tpf2_autofill</a> <br/>"
+                      "邮箱：15800733391@163.com <br/>"
                       "2025.12.14";
 
 }

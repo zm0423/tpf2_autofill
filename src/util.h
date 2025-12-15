@@ -152,7 +152,7 @@ enum class EndingType : int{
 
 EndingType checkEnding(const std::string& input);
 
-void text_to_vector(const std::string& input, std::vector<std::pair<std::string, int>> &output);
+bool text_to_vector(const std::string& input, std::vector<std::pair<std::string, int>> &output);
 
 
 

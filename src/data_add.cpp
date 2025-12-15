@@ -30,6 +30,7 @@ data_add::data_add(my_data &input_data, QWidget *parent)
     ui->setupUi(this);
     ui->checkBox->setChecked(sdata.trunc_if);
     ui->checkBox->setText(QString("截断\"%1\"以后内容").arg(sdata.trunc));
+    setWindowTitle("站点、线路数据导入");
     QObject::connect(ui->checkBox, &QCheckBox::toggled,
                      this, [&](bool p) {
                          sdata.trunc_if = p;
@@ -63,15 +64,17 @@ void data_add::on_station_input_clicked()
         return;
     std::vector<std::pair<std::string, int>> linedat;
 
-    sdata.station.clear();
 
-    text_to_vector(dat, linedat);
+
+    if(!text_to_vector(dat, linedat))
+        return;
 
     if(linedat.empty())
     {
         display_info("错误","数据过少");
         return;
     }
+
 
     std::sort(linedat.begin(), linedat.end(),
               [](const auto& a, const auto& b){
@@ -102,8 +105,8 @@ void data_add::on_line_input_clicked()
         return;
     std::vector<std::pair<std::string, int>> linedat;
 
-    sdata.station.clear();
-    text_to_vector(dat, linedat);
+    if(!text_to_vector(dat, linedat))
+        return;
 
     if(linedat.empty())
     {
@@ -140,7 +143,7 @@ void data_add::on_line_input_clicked()
         return;
 
 
-    display_info("提示","线路数据导入成功，若需更改请查看 存档名_station.xlsx");
+    display_info("提示","线路数据导入成功，若需更改请查看 存档名_line.xlsx");
 
     ui->textEdit->setText("");
 

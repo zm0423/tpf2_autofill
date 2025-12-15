@@ -49,10 +49,12 @@ bool get_first_cut(std::string& linename, const char token) {
 
 void readXlsx(const std::filesystem::path& filename, std::vector<std::pair<std::string, int>> &result)
 {
+    result.clear();
     if(!std::filesystem::exists(filename))
         return;
 
     QXlsx::Document xls(stq(filename.u8string()));
+
     for(int count = 1;;++count)
     {
         QVariant a = xls.read(count, 1);
@@ -74,10 +76,14 @@ void readXlsx(const std::filesystem::path& filename, std::vector<std::pair<std::
 
 void readXlsx(const std::filesystem::path& filename, std::unordered_map<std::string, int> &result)
 {
+    result.clear();
+
     if(!std::filesystem::exists(filename))
         return;
 
     QXlsx::Document xls(stq(filename.u8string()));
+
+
     for(int count = 1;;++count)
     {
         QVariant a = xls.read(count, 1);
@@ -175,14 +181,14 @@ EndingType checkEnding(const std::string& input) {
     return EndingType::NO_MATCH;
 }
 
-void text_to_vector(const std::string& input, std::vector<std::pair<std::string, int>> &output)
+bool text_to_vector(const std::string& input, std::vector<std::pair<std::string, int>> &output)
 {
     std::stringstream ss(input);
     std::string line;
     bool isnum = false;
     std::pair<std::string, int> temp;
     if(input.empty())
-        return;
+        return 0;
     while(std::getline(ss, line,'\n'))
     {
         if(line.empty())
@@ -198,13 +204,14 @@ void text_to_vector(const std::string& input, std::vector<std::pair<std::string,
                 display_info("错误","站点或线路输入信息的某一组内的第二行含有非数字");
                 output.clear();
                 output.shrink_to_fit();
-                return;
+                return 0;
             }
 
             output.push_back(temp);
         }
         isnum = !isnum;
     }
+    return 1;
 }
 
 void display_info(const QString& head, const QString& info)
