@@ -1,4 +1,4 @@
-QT       += core gui
+QT       += core gui webenginewidgets
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -10,6 +10,11 @@ CONFIG += c++11
 # deprecated API in order to know how to port your code away from it.
 DEFINES += QT_DEPRECATED_WARNINGS
 
+# 指定源代码中的语言（默认英文）
+CODECFORTR = UTF-8
+
+SOURCELANGUAGE = zh_CN  # 如果你的源代码是中文字符串
+
 TARGET = tpf2_autofill
 
 # You can also make your code fail to compile if it uses deprecated APIs.
@@ -18,14 +23,20 @@ TARGET = tpf2_autofill
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
+    src/MarkdownLanguageManager.cpp \
     src/data_add.cpp \
     src/main.cpp \
     src/mainui.cpp \
+    src/simplemarkdown.cpp \
     src/util.cpp \
 
+RESOURCES += resources.qrc
+
 HEADERS += \
+    src/MarkdownLanguageManager.h \
     src/data_add.h \
     src/mainui.h \
+    src/simplemarkdown.h \
     src/util.h \
 
 FORMS += \
@@ -33,6 +44,7 @@ FORMS += \
     ui/mainui.ui
 
 TRANSLATIONS += \
+    tpf2_autofill_zh_CN.ts \  # 源语言，方便查看所有可翻译文本
     tpf2_autofill_en_US.ts
 
 

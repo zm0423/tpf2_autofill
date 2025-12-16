@@ -66,7 +66,7 @@ void readXlsx(const std::filesystem::path& filename, std::vector<std::pair<std::
         result.push_back(std::make_pair(a.toString().trimmed().toUtf8().toStdString(), b.toInt(&v)));
         if(!v)
         {
-            display_info("错误","站点或线路文件第二列含有非数字，请修改后重新打开软件");
+            display_info(QObject::tr("错误"),QObject::tr("站点或线路文件第二列含有非数字，请修改后重新打开软件"));
             result.clear();
             return;
         }
@@ -95,7 +95,7 @@ void readXlsx(const std::filesystem::path& filename, std::unordered_map<std::str
         result.insert(std::make_pair(a.toString().trimmed().toUtf8().toStdString(), b.toInt(&v)));
         if(!v)
         {
-            display_info("错误","站点或线路文件第二列含有非数字，请修改后重新打开软件");
+            display_info(QObject::tr("错误"),QObject::tr("站点或线路文件第二列含有非数字，请修改后重新打开软件"));
             result.clear();
             return;
         }
@@ -110,7 +110,7 @@ bool writeVectorToXlsx(const std::vector<std::pair<std::string, int>>& data,
 {
     QXlsx::Document xls;
     QXlsx::Format songTi20;
-    songTi20.setFontName("宋体");
+    songTi20.setFontName(QObject::tr("宋体"));
     songTi20.setFontSize(20);
 
     xls.currentWorksheet()->setColumnFormat(1, 2, songTi20);
@@ -136,7 +136,7 @@ bool writeVectorToXlsx(const std::vector<std::pair<std::string, int>>& data,
 
     if(!xls.saveAs(stq(filepath.u8string())))
     {
-        display_info("错误","文件存储失败，请检查文件夹权限、是否被其他应用打开、或磁盘空间");
+        display_info(QObject::tr("错误"),QObject::tr("文件存储失败，请检查文件夹权限、是否被其他应用打开、或磁盘空间"));
         return 0;
     }
     return 1;
@@ -201,7 +201,7 @@ bool text_to_vector(const std::string& input, std::vector<std::pair<std::string,
             temp.second = std::stoi(line);
             }catch(std::invalid_argument& e)
             {
-                display_info("错误","站点或线路输入信息的某一组内的第二行含有非数字");
+                display_info(QObject::tr("错误"),QObject::tr("站点或线路输入信息的某一组内的第二行含有非数字"));
                 output.clear();
                 output.shrink_to_fit();
                 return 0;
@@ -224,7 +224,7 @@ void display_info(const QString& head, const QString& info)
 
     // 设置中文按钮
     msgBox.setStandardButtons(QMessageBox::NoButton);
-    QPushButton *yesButton = msgBox.addButton("确定", QMessageBox::AcceptRole);
+    QPushButton *yesButton = msgBox.addButton(QObject::tr("确定"), QMessageBox::AcceptRole);
     msgBox.setDefaultButton(yesButton);
     msgBox.exec();
     return;
@@ -346,7 +346,7 @@ bool write_to_lua(const std::filesystem::path& filename,
     outFile << text;
     outFile.close();
 
-    display_info("成功", QString("时刻表已成功导入，已生成备份文件 %1").arg(backupPath.filename().u8string()));
+    display_info(QObject::tr("成功"), QString(QObject::tr("时刻表已成功导入，已生成备份文件 %1")).arg(backupPath.filename().u8string()));
     return true;
 }
 
@@ -740,12 +740,12 @@ bool printq(const QString& q, const QString& p)
 {
 
     QDialog dialog;
-    dialog.setWindowTitle("确认");
+    dialog.setWindowTitle(QObject::tr("确认"));
 
     QVBoxLayout *mainLayout = new QVBoxLayout(&dialog);
 
     // 上面的文本
-    mainLayout->addWidget(new QLabel("时刻表表单数据如下："));
+    mainLayout->addWidget(new QLabel(QObject::tr("时刻表表单数据如下：")));
 
     // 中间的长文本区域
     QTextEdit *textEdit = new QTextEdit;
@@ -758,8 +758,8 @@ bool printq(const QString& q, const QString& p)
 
     // 按钮行
     QHBoxLayout *buttonLayout = new QHBoxLayout;
-    QPushButton *okButton = new QPushButton("确定");
-    QPushButton *cancelButton = new QPushButton("取消");
+    QPushButton *okButton = new QPushButton(QObject::tr("确定"));
+    QPushButton *cancelButton = new QPushButton(QObject::tr("取消"));
 
     buttonLayout->addStretch();
     buttonLayout->addWidget(okButton);
@@ -786,71 +786,71 @@ errortype::errortype(int type, QString q)
     {
 
         case LINE_EMPTY :
-            output = QString("未发现线路id数据");
+            output = QString(QObject::tr("未发现线路id数据"));
             break;
 
         case STATION_EMPTY :
-            output = QString("未发现站点id数据");
+            output = QString(QObject::tr("未发现站点id数据"));
             break;
 
         case LISTMODE_NOLIST:
-            output = QString("列表模式未发现列表");
+            output = QString(QObject::tr("列表模式未发现列表"));
             break;
 
         case LIST_LINE_DONT_EXIST :
-            output = QString("列表模式下，线路") + q + "不存在";
+            output = QString(QObject::tr("列表模式下，线路%1不存在").arg(q));
             break;
 
         case LIST_FILE_DONT_EXIST :
-            output = QString("列表模式下，文件") + q + "不存在";
+            output = QString(QObject::tr("列表模式下，文件%1不存在").arg(q));
             break;
 
         case LIST_SHEET_DONT_EXIST:
-            output = QString("列表模式下，") + q + "表单不存在";
+            output = QString(QObject::tr("列表模式下，%1表单不存在").arg(q));
             break;
 
         case NO_TIMETABLE:
-            output = QString("列表模式下无时刻表或简单模式未检测到任何时刻表");
+            output = QString(QObject::tr("列表模式下无时刻表或简单模式未检测到任何时刻表"));
             break;
 
         case STATION_DONT_EXIST:
-            output = QString("站点") + q + "对应id不存在";
+            output = QString(QObject::tr("站点%1不存在").arg(q));
             break;
 
         case NO_LINE_STAT:
-            output = QString("表单") + q + "内无数据";
+            output = QString(QObject::tr("表单%1内无数据").arg(q));
             break;
 
         case STATION_MISMATCH:
-            output = QString("线路") + q + "内存在多个时刻表的站点不对应";
+            output = QString(QObject::tr("线路%1内存在多个时刻表的站点不对应").arg(q));
             break;
 
         case TIME_INVALID:
-            output = QString("文件") + q + "内含有无效时间数据";
+            output = QString(QObject::tr("文件%1内含有无效时间数据").arg(q));
             break;
 
         case NO_SHEET_IN_FILE:
-            output = QString("文件") + q + "内无表单";
+            output = QString(QObject::tr("文件%1内无表单").arg(q));
             break;
 
         case SAVE_FILE_UNOPEN:
-            output = QString("存档文件无法打开，请检查权限等");
+            output = QString(QObject::tr("存档文件无法打开，请检查权限等"));
             break;
 
         case SAVE_FILE_UNSAVE:
-            output = QString("存档文件无法保存，请检查权限或者是否在别的应用打开等");
+            output = QString(QObject::tr("存档文件无法保存，请检查权限或者是否在别的应用打开等"));
             break;
 
         case NO_TIMETABLE_MOD:
-            output = QString("未安装时刻表mod");
+            output = QString(QObject::tr("未安装时刻表mod"));
             break;
 
         default:
-            output = "其他";
+            output = QObject::tr("其他");
             break;
     }
 
-        display_info("错误", output);
+        display_info(QObject::tr("错误"), output);
 }
 
 

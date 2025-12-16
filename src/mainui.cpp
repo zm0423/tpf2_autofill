@@ -19,6 +19,9 @@
 
 #include "xlsxdocument.h"
 
+#include "MarkdownLanguageManager.h"
+#include "simplemarkdown.h"
+
 std::string file_sufix(int i);
 
 namespace fs = std::filesystem;
@@ -30,6 +33,14 @@ mainui::mainui(QWidget *parent)
     , ui(new Ui::mainui)
 {
     ui->setupUi(this);
+
+    // 连接语言切换信号
+    connect(&MarkdownLanguageManager::instance(),
+            &MarkdownLanguageManager::languageChanged,
+            this, &mainui::onLanguageChanged);
+
+    // 更新语言按钮文本
+    updateLanguageButton();
 
     m_easyGroup = new QButtonGroup(this);
     m_easyGroup->addButton(ui->easymode, 1);
@@ -43,7 +54,7 @@ mainui::mainui(QWidget *parent)
     m_clearGroup->addButton(ui->clear_1, 1);
     m_clearGroup->addButton(ui->clear_2, 2);
     m_clearGroup->addButton(ui->clear_3, 3);
-    setWindowTitle("狂热运输2 时刻表自动输入");
+    setWindowTitle(tr("狂热运输2 时刻表自动输入"));
 
     QObject::connect(m_easyGroup, &QButtonGroup::idClicked,
                      this, [&](int p) {
@@ -143,25 +154,25 @@ void mainui::init()
         {
             QXlsx::Document doc;
             QXlsx::Format songTi20;
-            songTi20.setFontName("宋体");
+            songTi20.setFontName(tr("宋体"));
             songTi20.setFontSize(20);
 
             doc.currentWorksheet()->setColumnFormat(1, 6, songTi20);
 
-            doc.write(1, 1, "线路");
-            doc.write(1, 2, "文件1");
-            doc.write(1, 3, "表单名称");
-            doc.write(1, 4, "文件2");
-            doc.write(1, 5, "表单名称");
+            doc.write(1, 1, tr("线路"));
+            doc.write(1, 2, tr("文件1"));
+            doc.write(1, 3, tr("表单名称"));
+            doc.write(1, 4, tr("文件2"));
+            doc.write(1, 5, tr("表单名称"));
             doc.write(1, 6, "...");
 
             doc.saveAs(stq((sdata.folder_dir / (sdata.sg_name + "_list.xlsx")).u8string()));
 
-            QString q = "未检测到列表文件，已自动生成" + stq((sdata.folder_dir / (sdata.sg_name + "_list.xlsx")).u8string());
-            q += "，如采用列表模式请编辑该文件\n格式见文档，每行一个线路，如有更多文件请向后加。"
+            QString q = tr("未检测到列表文件，已自动生成") + stq((sdata.folder_dir / (sdata.sg_name + "_list.xlsx")).u8string());
+            q += tr("，如采用列表模式请编辑该文件\n格式见文档，每行一个线路，如有更多文件请向后加。"
                  "对于文件中的某些表单，请以空格分隔。"
-                 "如果需要一个文件里的所有表单请空置“表单名称”栏目，第一行仅做说明，可随意更改。";
-            display_info("提示", std::move(q));
+                 "如果需要一个文件里的所有表单请空置“表单名称”栏目，第一行仅做说明，可随意更改。");
+            display_info(tr("提示"), std::move(q));
 
         }
         return;
@@ -197,12 +208,12 @@ void mainui::on_input_data_clicked()
     refresh_file(sdata);
     if(sdata.folder_dir.empty())
     {
-        display_info("提示", "请先选取工作文件夹");
+        display_info(tr("提示"), tr("请先选取工作文件夹"));
         return;
     }
     if(sdata.sg_dir.empty())
     {
-        display_info("提示", "请先选取存档");
+        display_info(tr("提示"), tr("请先选取存档"));
         return;
     }
     data_add *adding = new data_add(sdata);
@@ -244,7 +255,7 @@ void mainui::on_sync_all_data_clicked()
 
 bool mainui::get_folder()
 {
-    display_info("选择目录", "请选取所有数据文件的根目录，即保存所有时刻表文件的目录。随后的车站和线路编号信息也都会存放于此");
+    display_info(tr("选择目录"), tr("请选取所有数据文件的根目录，即保存所有时刻表文件的目录。随后的车站和线路编号信息也都会存放于此"));
 
 
     fs::path folder = fs::u8path((QFileDialog::getExistingDirectory(this,
@@ -272,8 +283,8 @@ bool mainui::get_folder()
 bool mainui::get_sg()
 {
 
-    display_info("选择存档lua文件", "选取存档，默认应该为“C:\\Program Files (x86)\\Steam\\user"
-                                    "data\\XXXX\\1066780\\local\\save\\xxx.lua”，取决于steam安装位置");
+    display_info(tr("选择存档lua文件"), tr("选取存档，默认应该为“C:\\Program Files (x86)\\Steam\\user"
+                                    "data\\XXXX\\1066780\\local\\save\\xxx.lua”，取决于steam安装位置"));
 
     fs::path sg = fs::u8path((QFileDialog::getOpenFileName(this,
     tr("打开文件"),
@@ -295,25 +306,25 @@ bool mainui::get_sg()
     {
         QXlsx::Document doc;
         QXlsx::Format songTi20;
-        songTi20.setFontName("宋体");
+        songTi20.setFontName(tr("宋体"));
         songTi20.setFontSize(20);
 
         doc.currentWorksheet()->setColumnFormat(1, 6, songTi20);
 
-        doc.write(1, 1, "线路");
-        doc.write(1, 2, "文件1");
-        doc.write(1, 3, "表单名称");
-        doc.write(1, 4, "文件2");
-        doc.write(1, 5, "表单名称");
+        doc.write(1, 1, tr("线路"));
+        doc.write(1, 2, tr("文件1"));
+        doc.write(1, 3, tr("表单名称"));
+        doc.write(1, 4, tr("文件2"));
+        doc.write(1, 5, tr("表单名称"));
         doc.write(1, 6, "...");
 
         doc.saveAs(stq((sdata.folder_dir / (sdata.sg_name + "_list.xlsx")).u8string()));
 
-        QString q = "未检测到列表文件，已自动生成" + stq((sdata.folder_dir / (sdata.sg_name + "_list.xlsx")).u8string());
-        q += "，如采用列表模式请编辑该文件\n格式见文档，每行一个线路，如有更多文件请向后加。"
+        QString q = tr("未检测到列表文件，已自动生成") + stq((sdata.folder_dir / (sdata.sg_name + "_list.xlsx")).u8string());
+        q += tr("，如采用列表模式请编辑该文件\n格式见文档，每行一个线路，如有更多文件请向后加。"
              "对于文件中的某些表单，请以空格分隔。"
-             "如果需要一个文件里的所有表单请空置“表单名称”栏目，第一行仅做说明，可随意更改。";
-        display_info("提示", std::move(q));
+             "如果需要一个文件里的所有表单请空置“表单名称”栏目，第一行仅做说明，可随意更改。");
+        display_info(tr("提示"), std::move(q));
     }
 
 
@@ -339,10 +350,10 @@ void mainui::read_station_line()
 
 void mainui::refresh()
 {
-    ui->dir_name->setText(sdata.folder_name.empty()? "无" : QString::fromStdString(sdata.folder_name));
-    ui->savegame_name->setText(sdata.sg_name.empty()? "无" : QString::fromStdString(sdata.sg_name));
-    ui->station_status->setText(sdata.station.empty()? "否":"是");
-    ui->line_status->setText(sdata.line.empty()? "否":"是");
+    ui->dir_name->setText(sdata.folder_name.empty()? tr("无") : QString::fromStdString(sdata.folder_name));
+    ui->savegame_name->setText(sdata.sg_name.empty()? tr("无") : QString::fromStdString(sdata.sg_name));
+    ui->station_status->setText(sdata.station.empty()? tr("否"):tr("是"));
+    ui->line_status->setText(sdata.line.empty()? tr("否"):tr("是"));
 }
 
 
@@ -568,8 +579,8 @@ bool mainui::get_data(std::vector<std::pair<int, std::vector<std::pair<QString, 
     int progress = 0;
 
     QProgressDialog progressDialog;
-    progressDialog.setWindowTitle("打开文件");
-    progressDialog.setLabelText("正在打开文件...");
+    progressDialog.setWindowTitle(tr("打开文件"));
+    progressDialog.setLabelText(tr("正在打开文件..."));
     progressDialog.setRange(0, leng.size());
     progressDialog.setValue(0);
     progressDialog.setCancelButton(nullptr); // 不显示取消按钮
@@ -593,7 +604,7 @@ bool mainui::get_data(std::vector<std::pair<int, std::vector<std::pair<QString, 
                 if(files.find(sheet.first) == files.end())
                 {
                     // 更新进度文本
-                    progressDialog.setLabelText(QString("正在打开文件：%1").arg(QFileInfo(sheet.first).fileName()));
+                    progressDialog.setLabelText(QString(tr("正在打开文件：%1")).arg(QFileInfo(sheet.first).fileName()));
                     progressDialog.setValue(progress);
 
                     // 强制UI更新
@@ -649,7 +660,7 @@ bool mainui::get_data(std::vector<std::pair<int, std::vector<std::pair<QString, 
                 fs::path filename = fs::u8path(sheet.first.toStdString());
 
                 // 更新进度文本
-                progressDialog.setLabelText(QString("正在打开文件：%1").arg(stq(filename.filename().u8string())));
+                progressDialog.setLabelText(QString(tr("正在打开文件：%1")).arg(stq(filename.filename().u8string())));
                 progressDialog.setValue(progress);
 
                 // 强制UI更新
@@ -894,11 +905,11 @@ bool mainui::get_data(std::vector<std::pair<int, std::vector<std::pair<QString, 
 
     for (int i = 0;i < output.size();++i)
     {
-        q += QString("%1 : %2组数据")
+        q += QString(tr("%1 : %2组数据"))
                  .arg(get_linename(sdata.line, output[i].first))
                  .arg(shrink_num[i]);
         if(shrink_if[i])
-            q += "     包含相近或重复数据";
+            q += tr("     包含相近或重复数据");
         QString last;
         for(auto &p :list[i].second)
         {
@@ -921,14 +932,24 @@ bool mainui::get_data(std::vector<std::pair<int, std::vector<std::pair<QString, 
     }
 
     QString p;
-    p += sdata.clear_if ?
-             "当前为清空模式，即删除所有原时刻表\n" :
-             "当前为覆盖模式，即仅添加或更新现有时刻表\n";
+    switch (sdata.clear_if) {
+    case 1:
+        p += tr("当前为覆盖模式，即仅添加或更新现有时刻表\n");
+        break;
+    case 2:
+        p += tr("当前为列表清空，即仅清空_line文件内包含的列表\n");
+        break;
+    case 3:
+        p += tr("当前为全部清空模式，即删除所有原时刻表\n");
+        break;
+    default:
+        break;
+    }
 
     p += shrinkif ?
-                    "当前时刻表存在重复或者相近（两组或多组时刻表所有站点时刻<5s），\n"
-                    "按确认则随机保留一组并继续，按取消则返回" :
-                    "请核对时刻表数量以及表单，按确认继续";
+                    tr("当前时刻表存在重复或者相近（两组或多组时刻表所有站点时刻<5s），\n"
+                    "按确认则随机保留一组并继续，按取消则返回") :
+                    tr("请核对时刻表数量以及表单，按确认继续");
 
     if(!printq(q, p))
         return 0;
@@ -1021,118 +1042,68 @@ std::string mainui::get_filetext(int lineId, const std::vector<stationinfo>& sta
     return oss.str();
 }
 
-namespace {
-
-const QString instruction = "说明：\n"
-                  "\n"
-                  "先选择根目录文件夹，这里是所有时刻表数据以及系统数据的存放地，\n"
-                  "再选择存档，它一般在“C:\\Program Files (x86)\\Steam\\user\n"
-                  "data\\XXXX\\1066780\\local\\save\\xxx.lua”，取决于steam安装位置，\n"
-                  "如果找不到，可以进入游戏-设置-高级-打开用户数据文件夹\n"
-                  "\n"
-                  "然后进入游戏，获取存档的站点信息和线路信息，方法见“站点、线路数据录入”内的说明，\n"
-                  "存在站点、线路数据表示已成功导入，\n"
-                  "请根据需要修改他们，为存档名_station(line).xlsx，尤其是覆盖选项\n"
-                  "\n"
-                  "随后进入数据录入，接下来介绍模式：\n"
-                  "简单模式：根据_line内的线路数据依次寻找文件\n"
-                  "         文件命名规则：例：Z1.xlsx，Z1_2.xlsx，Z1_3.xlsx ...诸如此类，\n"
-                  "         同一线路不同时刻表请按照这个规则命名，\n"
-                  "         自动采用文件里的所有表单。\n"
-                  "列表模式：程序已自动生成存档名_list.xlsx，第一行数据请随意更改\n"
-                  "         从第二行开始，每一行一个线路，第一列为线路名称，\n"
-                  "         第二列开始，每两列分别为文件名、表单名，\n"
-                  "         多表单请用空格分隔，需要所有表单请空着，\n"
-                  "         可无限往后加，也可相同线路再单开一行。\n"
-                  "\n"
-                  "其余选项说明：\n"
-                  "xlsx，csv：顾名思义。csv仅支持UTF8格式，请在另存为界面寻找相关编码，csv列表模式忽略表单数据\n"
-                  "\n"
-                  "数据最后一行为无效数据：顾名思义。最后一行无效比较方便拉表。\n"
-                  "\n"
-                  "时刻表堆叠：举例：一班车在60min内跑了一个交路三次，那么打开这个选项就会记录3组时刻表，否则是1组\n"
-                  "\n"
-                  "仅覆盖：仅覆盖检测到的所有时刻表，比如数据里仅有一个车次的时刻表那就只覆盖这个\n"
-                  "清空line后导入：检测所有line文件里的线路，删除这些线路的时刻表（如果存在）并导入\n"
-                  "               适合有其他非火车线路的时刻表时，设置好line里仅保存火车线路，清空火车线路时刻表并覆盖\n"
-                  "全部清空后导入：删除所有存在的时刻表并导入\n"
-                  "\n"
-                  "其他注意事项：\n"
-                  "所有时刻表格式应符合第二列为站点名称，第三、四列为到发时刻数据，其余数据并不读取，\n"
-                  "请保证站点和线路名称匹配，\n"
-                  "如果监测到有重复的时刻表数据，或者两组数据所有间隔小于5s，会默认合并重复的项目，并且在导入前提示，\n"
-                  "每次导入都会为上一次做一个备份，位置为存档文件夹，\n"
-                  "如需回档请直接修改文件名（请在文件夹界面查看-显示里打开文件名扩展），并copy回存档文件夹\n"
-                  "导入时刻表时请关闭游戏存档\n"
-                  "\n"
-                    "如果遇到了任何问题，请打开关于界面和我反馈，谢谢！b站私信和github均可\n";
-
-const QString about = "作者：今天学高代了吗<br/>"
-                      "b站视频教程：<a href=\"https://www.bilibili.com/video/BV1yj2ABwE9v/"
-                      "?spm_id_from=333.1387.homepage.video_card.click&vd_source=3fd42c24215ba0da48b95a40864f298c\">"
-                      "https://www.bilibili.com/video/BV1yj2ABwE9v</a> <br/>"
-                      "github：<a href=\"https://github.com/zm0423/tpf2_autofill\"> "
-                      "https://github.com/zm0423/tpf2_autofill</a> <br/>"
-                      "邮箱：15800733391@163.com <br/>"
-                      "2025.12.14";
-
-}
-
-
 void mainui::on_settinginfo_clicked()
 {
-    QDialog dialog;
-    dialog.setWindowTitle("说明");
 
-    // 获取屏幕尺寸
-    QScreen* screen = QGuiApplication::primaryScreen();
-    QRect screenGeometry = screen->availableGeometry();
-
-    // 设置对话框为屏幕的70%
-    int width = screenGeometry.width() * 0.7;
-    int height = screenGeometry.height() * 0.7;
-    dialog.resize(width, height);
-
-    QTextEdit* textEdit = new QTextEdit(&dialog);
-    textEdit->setReadOnly(true);
-
-    // 根据屏幕尺寸调整字体
-    int fontSize = qMax(10, width / 80);  // 动态计算字体大小
-    QFont font("Arial", fontSize);
-    textEdit->setFont(font);
-
-    // 加载长文本（可以从文件读取）
-    textEdit->setPlainText(instruction);
-
-    QVBoxLayout* layout = new QVBoxLayout(&dialog);
-    layout->addWidget(textEdit);
-
-
-    dialog.exec();
+    QString markdown = loadMarkdownContent("mainui");
+    QString title = tr("说明");
+    SimpleWebMarkdownDialog::showDialog(title, markdown, this);
 
 }
-
-
-
-
-
-
 
 void mainui::on_settinginfo_2_clicked()
 {
     QMessageBox msgBox;
     msgBox.setTextFormat(Qt::RichText);
-    msgBox.setText(about);
+    msgBox.setText(QString(QObject::tr("作者：今天学高代了吗<br/>"
+                                       "b站视频教程：<a href=\"https://www.bilibili.com/video/BV1yj2ABwE9v/"
+                                       "?spm_id_from=333.1387.homepage.video_card.click&vd_source=3fd42c24215ba0da48b95a40864f298c\">"
+                                       "https://www.bilibili.com/video/BV1yj2ABwE9v</a> <br/>"
+                                       "github：<a href=\"https://github.com/zm0423/tpf2_autofill\"> "
+                                       "https://github.com/zm0423/tpf2_autofill</a> <br/>"
+                                       "邮箱：15800733391@163.com <br/>"
+                                       "2025.12.14")));
 
     msgBox.setWindowFlags(Qt::Dialog);
-    msgBox.setWindowTitle("关于");
+    msgBox.setWindowTitle(tr("关于"));
     msgBox.setIcon(QMessageBox::NoIcon);
 
     // 设置中文按钮
     msgBox.setStandardButtons(QMessageBox::NoButton);
-    QPushButton *yesButton = msgBox.addButton("确定", QMessageBox::AcceptRole);
+    QPushButton *yesButton = msgBox.addButton(tr("确定"), QMessageBox::AcceptRole);
     msgBox.setDefaultButton(yesButton);
     msgBox.exec();
     return;
 }
+
+
+void mainui::on_language_button_clicked()
+{
+    MarkdownLanguageManager::instance().toggleLanguage();
+
+    // 更新按钮文本
+    updateLanguageButton();
+}
+
+void mainui::updateLanguageButton()
+{
+    ui->language_button->setText(
+        MarkdownLanguageManager::instance().languageButtonText()
+        );
+}
+
+void mainui::onLanguageChanged()
+{
+
+    // 更新按钮文本
+    updateLanguageButton();
+    ui->retranslateUi(this);
+    refresh();
+}
+
+QString mainui::loadMarkdownContent(const QString &docName)
+{
+    return MarkdownLanguageManager::instance().loadMarkdown(docName);
+}
+
 

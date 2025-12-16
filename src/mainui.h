@@ -5,6 +5,8 @@
 #include "util.h"
 #include <QButtonGroup>
 
+
+
 QT_BEGIN_NAMESPACE
 namespace Ui { class mainui; }
 QT_END_NAMESPACE
@@ -34,6 +36,8 @@ private slots:
 
     void on_settinginfo_2_clicked();
 
+    void on_language_button_clicked();
+
 private:
 
     void init();
@@ -58,8 +62,9 @@ private:
 
     std::string get_filetext(int lineId, const std::vector<stationinfo>& stations);
 
-    
-
+    void updateLanguageButton();        // 更新按钮文本
+    QString loadMarkdownContent(const QString &docName);  // 加载Markdown
+    void onLanguageChanged();  // 响应语言管理器信号
 
     my_data sdata;
 
