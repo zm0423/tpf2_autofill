@@ -11,7 +11,7 @@ An automation tool designed for *Transport Fever 2* players to automatically imp
 - **Safe Backup**: Automatically backs up the save file before each operation to prevent data loss.
 
 ## Installation
-Go to the [Releases](https://github.com/yourusername/your-repo/releases) page, download the latest version's compressed package, and extract it to use.
+Go to the [Releases](https://github.com/zm0423/tpf2_autofill/releases) page, download the latest version's compressed package, and extract it to use.
 
 ## Basic Steps
 <div align="center">
