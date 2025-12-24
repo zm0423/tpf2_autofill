@@ -94,6 +94,7 @@ void mainui::init()
 {
     std::ifstream sys_file(sys_file_name);
     std::string buf;
+    updateLanguageButton();
     if(sys_file)
     {
         if(getline(sys_file,buf,'\n'))
@@ -231,6 +232,7 @@ void mainui::on_sync_all_data_clicked()
 {
     refresh_file(sdata);
     read_station_line();
+    refresh();
     std::vector<std::pair<int, std::vector<std::pair<QString, QString>>>> lists;
 
     if(!get_list(lists))

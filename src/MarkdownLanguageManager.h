@@ -14,9 +14,9 @@ class MarkdownLanguageManager : public QObject
 
 public:
     enum Language {
-        English,
-        Chinese,
-        SystemDefault
+        English = 0,
+        Chinese = 1,
+        SystemDefault = -1
     };
 
     static MarkdownLanguageManager& instance();

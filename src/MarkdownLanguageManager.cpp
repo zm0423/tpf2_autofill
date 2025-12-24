@@ -13,6 +13,7 @@ MarkdownLanguageManager& MarkdownLanguageManager::instance()
 }
 
 MarkdownLanguageManager::MarkdownLanguageManager()
+ :m_settings("TPF2AUTOFILL", "TPF2autofill")
 {
     // 从设置读取
     int savedLang = m_settings.value("language", SystemDefault).toInt();

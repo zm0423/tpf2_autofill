@@ -4,7 +4,7 @@
 <context>
     <name>MarkdownLanguageManager</name>
     <message>
-        <location filename="src/MarkdownLanguageManager.cpp" line="107"/>
+        <location filename="src/MarkdownLanguageManager.cpp" line="108"/>
         <source># Error
 Cannot load document.</source>
         <translation># Error
@@ -14,7 +14,7 @@ Cannot load document.</translation>
 <context>
     <name>QObject</name>
     <message>
-        <location filename="src/mainui.cpp" line="1047"/>
+        <location filename="src/mainui.cpp" line="1059"/>
         <source>作者：今天学高代了吗&lt;br/&gt;b站视频教程：&lt;a href=&quot;https://www.bilibili.com/video/BV1yj2ABwE9v/?spm_id_from=333.1387.homepage.video_card.click&amp;vd_source=3fd42c24215ba0da48b95a40864f298c&quot;&gt;https://www.bilibili.com/video/BV1yj2ABwE9v&lt;/a&gt; &lt;br/&gt;github：&lt;a href=&quot;https://github.com/zm0423/tpf2_autofill&quot;&gt; https://github.com/zm0423/tpf2_autofill&lt;/a&gt; &lt;br/&gt;邮箱：15800733391@163.com &lt;br/&gt;2025.12.14</source>
         <translation>Author：zm0423&lt;br/&gt;github：&lt;a href=&quot;https://github.com/zm0423/tpf2_autofill&quot;&gt; https://github.com/zm0423/tpf2_autofill&lt;/a&gt; &lt;br/&gt;email：15800733391@163.com &lt;br/&gt;2025.12.14</translation>
     </message>
@@ -358,8 +358,8 @@ Please enter a character within the range 0-127.</translation>
     <message>
         <location filename="ui/mainui.ui" line="67"/>
         <location filename="ui/mainui.ui" line="81"/>
-        <location filename="src/mainui.cpp" line="355"/>
         <location filename="src/mainui.cpp" line="356"/>
+        <location filename="src/mainui.cpp" line="357"/>
         <source>否</source>
         <translation>NO</translation>
     </message>
@@ -394,32 +394,32 @@ Please enter a character within the range 0-127.</translation>
         <translation>Transport Fever 2 Timetable Mod Auto-Fill</translation>
     </message>
     <message>
-        <location filename="ui/mainui.ui" line="230"/>
+        <location filename="ui/mainui.ui" line="233"/>
         <source>简单模式</source>
         <translation>Simple Mode</translation>
     </message>
     <message>
-        <location filename="ui/mainui.ui" line="243"/>
+        <location filename="ui/mainui.ui" line="246"/>
         <source>列表匹配模式</source>
         <translation>List Match Mode</translation>
     </message>
     <message>
-        <location filename="ui/mainui.ui" line="256"/>
+        <location filename="ui/mainui.ui" line="259"/>
         <source>XLSX</source>
         <translation>XLSX</translation>
     </message>
     <message>
-        <location filename="ui/mainui.ui" line="269"/>
+        <location filename="ui/mainui.ui" line="272"/>
         <source>CSV-UTF8</source>
         <translation>CSV-UTF8</translation>
     </message>
     <message>
-        <location filename="ui/mainui.ui" line="287"/>
+        <location filename="ui/mainui.ui" line="290"/>
         <source>csv模式不支持多表单</source>
         <translation>No multisheets supported</translation>
     </message>
     <message>
-        <location filename="ui/mainui.ui" line="300"/>
+        <location filename="ui/mainui.ui" line="303"/>
         <source>忽略最后
 一行数据</source>
         <oldsource>数据最后一行
@@ -428,41 +428,41 @@ Please enter a character within the range 0-127.</translation>
 data ignored.</translation>
     </message>
     <message>
-        <location filename="ui/mainui.ui" line="314"/>
-        <location filename="src/mainui.cpp" line="1063"/>
+        <location filename="ui/mainui.ui" line="317"/>
+        <location filename="src/mainui.cpp" line="1050"/>
         <source>说明</source>
         <translation>Instruction</translation>
     </message>
     <message>
-        <location filename="ui/mainui.ui" line="327"/>
+        <location filename="ui/mainui.ui" line="330"/>
         <source>时刻表堆叠</source>
         <translation>Timetable Stacking</translation>
     </message>
     <message>
-        <location filename="ui/mainui.ui" line="340"/>
+        <location filename="ui/mainui.ui" line="343"/>
         <source>仅覆盖</source>
         <translation>Overwrite Only</translation>
     </message>
     <message>
-        <location filename="ui/mainui.ui" line="353"/>
+        <location filename="ui/mainui.ui" line="356"/>
         <source>清空line并导入</source>
-        <translation type="unfinished">Clear _line 
+        <translation>Clear _line 
 and import.</translation>
     </message>
     <message>
-        <location filename="ui/mainui.ui" line="366"/>
+        <location filename="ui/mainui.ui" line="369"/>
         <source>全部清空后导入</source>
-        <translation type="unfinished">Clear all 
+        <translation>Clear all 
 and import.</translation>
     </message>
     <message>
-        <location filename="ui/mainui.ui" line="379"/>
-        <location filename="src/mainui.cpp" line="1075"/>
+        <location filename="ui/mainui.ui" line="382"/>
+        <location filename="src/mainui.cpp" line="1069"/>
         <source>关于</source>
         <translation>About</translation>
     </message>
     <message>
-        <location filename="ui/mainui.ui" line="392"/>
+        <location filename="ui/mainui.ui" line="395"/>
         <source>English</source>
         <translation></translation>
     </message>
@@ -472,158 +472,158 @@ and import.</translation>
         <translation>Transport Fever 2 Timetable Mod Auto-Fill</translation>
     </message>
     <message>
-        <location filename="src/mainui.cpp" line="157"/>
-        <location filename="src/mainui.cpp" line="309"/>
+        <location filename="src/mainui.cpp" line="158"/>
+        <location filename="src/mainui.cpp" line="310"/>
         <source>宋体</source>
         <translation>Arial</translation>
     </message>
     <message>
-        <location filename="src/mainui.cpp" line="162"/>
-        <location filename="src/mainui.cpp" line="314"/>
+        <location filename="src/mainui.cpp" line="163"/>
+        <location filename="src/mainui.cpp" line="315"/>
         <source>线路</source>
         <translation>Route</translation>
     </message>
     <message>
-        <location filename="src/mainui.cpp" line="163"/>
-        <location filename="src/mainui.cpp" line="315"/>
+        <location filename="src/mainui.cpp" line="164"/>
+        <location filename="src/mainui.cpp" line="316"/>
         <source>文件1</source>
         <translation>File1</translation>
     </message>
     <message>
-        <location filename="src/mainui.cpp" line="164"/>
-        <location filename="src/mainui.cpp" line="166"/>
-        <location filename="src/mainui.cpp" line="316"/>
-        <location filename="src/mainui.cpp" line="318"/>
+        <location filename="src/mainui.cpp" line="165"/>
+        <location filename="src/mainui.cpp" line="167"/>
+        <location filename="src/mainui.cpp" line="317"/>
+        <location filename="src/mainui.cpp" line="319"/>
         <source>表单名称</source>
         <translation>Sheets</translation>
     </message>
     <message>
-        <location filename="src/mainui.cpp" line="165"/>
-        <location filename="src/mainui.cpp" line="317"/>
+        <location filename="src/mainui.cpp" line="166"/>
+        <location filename="src/mainui.cpp" line="318"/>
         <source>文件2</source>
         <translation>File2</translation>
     </message>
     <message>
-        <location filename="src/mainui.cpp" line="171"/>
-        <location filename="src/mainui.cpp" line="323"/>
+        <location filename="src/mainui.cpp" line="172"/>
+        <location filename="src/mainui.cpp" line="324"/>
         <source>未检测到列表文件，已自动生成</source>
         <translation>No list file detected.Automatically generate</translation>
     </message>
     <message>
-        <location filename="src/mainui.cpp" line="172"/>
-        <location filename="src/mainui.cpp" line="324"/>
+        <location filename="src/mainui.cpp" line="173"/>
+        <location filename="src/mainui.cpp" line="325"/>
         <source>，如采用列表模式请编辑该文件
 格式见文档，每行一个线路，如有更多文件请向后加。对于文件中的某些表单，请以空格分隔。如果需要一个文件里的所有表单请空置“表单名称”栏目，第一行仅做说明，可随意更改。</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="src/mainui.cpp" line="175"/>
-        <location filename="src/mainui.cpp" line="211"/>
-        <location filename="src/mainui.cpp" line="216"/>
-        <location filename="src/mainui.cpp" line="327"/>
+        <location filename="src/mainui.cpp" line="176"/>
+        <location filename="src/mainui.cpp" line="212"/>
+        <location filename="src/mainui.cpp" line="217"/>
+        <location filename="src/mainui.cpp" line="328"/>
         <source>提示</source>
         <translation>Note:</translation>
     </message>
     <message>
-        <location filename="src/mainui.cpp" line="211"/>
+        <location filename="src/mainui.cpp" line="212"/>
         <source>请先选取工作文件夹</source>
         <translation>Please select a working folder first.</translation>
     </message>
     <message>
-        <location filename="src/mainui.cpp" line="216"/>
+        <location filename="src/mainui.cpp" line="217"/>
         <source>请先选取存档</source>
         <translation>Please select a save file first.</translation>
     </message>
     <message>
-        <location filename="src/mainui.cpp" line="258"/>
-        <location filename="src/mainui.cpp" line="262"/>
+        <location filename="src/mainui.cpp" line="259"/>
+        <location filename="src/mainui.cpp" line="263"/>
         <source>选择目录</source>
         <translation>Select Directory</translation>
     </message>
     <message>
-        <location filename="src/mainui.cpp" line="258"/>
+        <location filename="src/mainui.cpp" line="259"/>
         <source>请选取所有数据文件的根目录，即保存所有时刻表文件的目录。随后的车站和线路编号信息也都会存放于此</source>
         <translation>Please select the root directory for all data files, which is the folder where all timetable files are saved. Subsequent station and route numbering information will also be stored here.</translation>
     </message>
     <message>
-        <location filename="src/mainui.cpp" line="286"/>
+        <location filename="src/mainui.cpp" line="287"/>
         <source>选择存档lua文件</source>
         <translation>Select Save Lua File</translation>
     </message>
     <message>
-        <location filename="src/mainui.cpp" line="286"/>
+        <location filename="src/mainui.cpp" line="287"/>
         <source>选取存档，默认应该为“C:\Program Files (x86)\Steam\userdata\XXXX\1066780\local\save\xxx.lua”，取决于steam安装位置</source>
         <translation>Select save file. The default path is typically:
 `C:\Program Files (x86)\Steam\userdata\XXXX\1066780\local\save\xxx.lua`
 (Depends on your Steam installation location.)</translation>
     </message>
     <message>
-        <location filename="src/mainui.cpp" line="290"/>
-        <location filename="src/mainui.cpp" line="582"/>
+        <location filename="src/mainui.cpp" line="291"/>
+        <location filename="src/mainui.cpp" line="583"/>
         <source>打开文件</source>
         <translation>Open File</translation>
     </message>
     <message>
-        <location filename="src/mainui.cpp" line="293"/>
+        <location filename="src/mainui.cpp" line="294"/>
         <source>lua文件 (*.lua);;所有文件 (*.*)</source>
         <translation>Lua files (*.lua);;All files (*.*)</translation>
     </message>
     <message>
-        <location filename="src/mainui.cpp" line="353"/>
         <location filename="src/mainui.cpp" line="354"/>
+        <location filename="src/mainui.cpp" line="355"/>
         <source>无</source>
         <translation>NO</translation>
     </message>
     <message>
-        <location filename="src/mainui.cpp" line="355"/>
         <location filename="src/mainui.cpp" line="356"/>
+        <location filename="src/mainui.cpp" line="357"/>
         <source>是</source>
         <translation>YES</translation>
     </message>
     <message>
-        <location filename="src/mainui.cpp" line="583"/>
+        <location filename="src/mainui.cpp" line="584"/>
         <source>正在打开文件...</source>
         <translation>Opening file...</translation>
     </message>
     <message>
-        <location filename="src/mainui.cpp" line="607"/>
-        <location filename="src/mainui.cpp" line="663"/>
+        <location filename="src/mainui.cpp" line="608"/>
+        <location filename="src/mainui.cpp" line="664"/>
         <source>正在打开文件：%1</source>
         <translation>Opening file: %1</translation>
     </message>
     <message>
-        <location filename="src/mainui.cpp" line="908"/>
+        <location filename="src/mainui.cpp" line="909"/>
         <source>%1 : %2组数据</source>
-        <translation>%1 : %2组数据</translation>
+        <translation>%1: %2 groups of data</translation>
     </message>
     <message>
-        <location filename="src/mainui.cpp" line="912"/>
+        <location filename="src/mainui.cpp" line="913"/>
         <source>     包含相近或重复数据</source>
         <translation>    Contains similar or duplicate data.</translation>
     </message>
     <message>
-        <location filename="src/mainui.cpp" line="937"/>
+        <location filename="src/mainui.cpp" line="938"/>
         <source>当前为覆盖模式，即仅添加或更新现有时刻表
 </source>
         <translation>Currently in &quot;Overwrite Only&quot; mode. Only adding or updating existing timetables.
 </translation>
     </message>
     <message>
-        <location filename="src/mainui.cpp" line="940"/>
+        <location filename="src/mainui.cpp" line="941"/>
         <source>当前为列表清空，即仅清空_line文件内包含的列表
 </source>
         <translation>Currently in &quot;Clear List&quot; mode. Only clearing the list contained in the `_line` file.
 </translation>
     </message>
     <message>
-        <location filename="src/mainui.cpp" line="943"/>
+        <location filename="src/mainui.cpp" line="944"/>
         <source>当前为全部清空模式，即删除所有原时刻表
 </source>
         <translation>Currently in &quot;Clear All&quot; mode. All existing timetables will be deleted.
 </translation>
     </message>
     <message>
-        <location filename="src/mainui.cpp" line="950"/>
+        <location filename="src/mainui.cpp" line="951"/>
         <source>当前时刻表存在重复或者相近（两组或多组时刻表所有站点时刻&lt;5s），
 按确认则随机保留一组并继续，按取消则返回</source>
         <translation>Duplicate or similar timetables detected (two or more timetables have all station arrival/departure times differing by &lt;5 seconds).
@@ -632,12 +632,12 @@ Press OK to randomly keep one set and proceed.
 Press Cancel to return.</translation>
     </message>
     <message>
-        <location filename="src/mainui.cpp" line="952"/>
+        <location filename="src/mainui.cpp" line="953"/>
         <source>请核对时刻表数量以及表单，按确认继续</source>
         <translation>Please verify the number of timetables and the sheet, then press OK to continue.</translation>
     </message>
     <message>
-        <location filename="src/mainui.cpp" line="1080"/>
+        <location filename="src/mainui.cpp" line="1074"/>
         <source>确定</source>
         <translation>OK</translation>
     </message>
