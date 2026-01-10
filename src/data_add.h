@@ -3,6 +3,7 @@
 
 #include <QWidget>
 #include "util.h"
+#include <QButtonGroup>
 
 namespace Ui {
 class data_add;
@@ -17,9 +18,6 @@ public:
     ~data_add();
 
 private slots:
-    void on_station_copy_clicked();
-
-    void on_line_copy_clicked();
 
     void on_station_input_clicked();
 
@@ -31,11 +29,13 @@ private slots:
 
 private:
 
+    enum {
+      ADD = 1,
+      COVER = 0,
+    };
 
-
-
-    const std::string stationcpy = "api.engine.forEachEntityWithComponent(function(entity) print(api.engine.getComponent(entity, api.type.ComponentType.NAME).name)print(entity) end,api.type.ComponentType.STATION_GROUP)";
-    const std::string linecpy = "api.engine.forEachEntityWithComponent(function(entity) print(api.engine.getComponent(entity, api.type.ComponentType.NAME).name)print(entity) end,api.type.ComponentType.LINE)";
+    QButtonGroup* station_group;
+    QButtonGroup* line_group;
 
     Ui::data_add *ui;
     my_data &sdata;

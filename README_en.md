@@ -28,51 +28,25 @@ Go to the [Releases](https://github.com/zm0423/tpf2_autofill/releases) page, dow
         (Depends on your Steam installation location).
     >   **Tip**: You can also locate it in-game via **Settings → Advanced → Open User Data Folder**.
 
-3.  **Enable Game Debug Mode**
-    *   Enter the game, open **Settings → Advanced**.
-    *   Enable **Debug Mode**.
-    *   **Restart the game** for the setting to take effect, then load your save.
-    <div align="center">
-    <img src="./images/8.png" width="60%" alt="Game Settings Interface">
-    </div>
+3. **Download and activate assist mod**
+   - Download "Timetable autofill program assist tool" mod in the workshop.
+   - Activate it in your save game and save it.
 
-4.  **Open Console and Execute Command**
-    *   Press the **\`** key (backtick) in-game to open the console. (This key can be customized in game settings).
-    <div align="center">
-    <img src="./images/4.png" width="60%" alt="Interface Step 2"><br>
-    <small><em>Interface 2</em></small>
-    </div>
 
-    *   Copy the provided console command, paste it into the console, and press **Enter** to execute.
-    <div align="center">
-
-    <img src="./images/2.png" width="60%" alt="Console Data Example">
-    </div>
-
-5.  **Copy and Process Output Data**
-    *   After execution, the console will display a large amount of data.
-    *   **Copy all text** from the console, starting from the line **above the `uil` text** and ending **just before the command line you pasted**.
-    **Example Screenshot:**
-    <div align="center">
-    <img src="./images/3.png" width="60%" alt="Console Data Copy Area">
-    </div>
-
-    *   **Correct Data Format**: Should follow the pattern: one name line, one blank line, one number (ID) line, one blank line... repeating.
-    *   **Note**: Garbled characters in names are normal if your language is not ASCII.
-
-6.  **Import Data into the Software**
-    *   Paste all the text copied in the previous step into the **left input box** of this software's interface.
+4.  **Import Data into the Software**
     *   Click either the **"Station Import"** or **"Route Import"** button based on your needs.
+    *   Select either **Overwrite** or **Add only**. **Overwrite** is recommended becasue it is better in auto sorting.
     *   **About Routes**: The software supports truncating long route names. For example, "G1/2 Shanghai-Beijing" can be truncated to "G1" to facilitate matching with timetable files. The truncation character can be customized.
 
     > **Important:**
     > **Data Consistency is Crucial**: When performing the "Synchronize Timetables" operation later, the **station names** and **route names** in your timetable data must **exactly match** the data imported here (only leading/trailing spaces are allowed).
     > **Ensure Correct ID Recognition**: Whether you directly modify the timetable files or the generated `_station.xlsx` / `_line.xlsx` files, the ultimate goal is for the software to **correctly match names to the internal game IDs**. If mismatches occur, please check and modify the relevant data yourself.
+    > **Make sure the data you actually use is unique**: No matter line or station, if you use this name in your timetable data, make sure it is unique.
 
     *   After successful import, two files will be generated: `[SaveName]_station.xlsx` and `[SaveName]_line.xlsx`.
     *   Please verify and modify the data in these files as needed. Changes to the `_line` file affect the **Overwrite Options**.
 
-7.  **Confirm Import Mode and Click Start**
+5.  **Confirm Import Mode and Click Start**
 
 ### Data Import Mode Description
 
@@ -117,6 +91,7 @@ Go to the [Releases](https://github.com/zm0423/tpf2_autofill/releases) page, dow
 
 2.  **Name Matching**:
     *   Ensure that **station names** and **route names** in the timetable files **exactly match** the data from the game save (only leading/trailing spaces are allowed).
+    *   **Make sure the data you actually use is unique**: No matter line or station, if you use this name in your timetable data, make sure it is unique.
 
 3.  **Duplicate Data Handling**:
     *   If completely duplicate timetable data is detected, or if the arrival/departure times between two sets of data differ by less than 5 seconds, the program will **automatically merge** these duplicates and prompt you before import.

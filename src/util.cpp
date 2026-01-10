@@ -63,7 +63,7 @@ void readXlsx(const std::filesystem::path& filename, std::vector<std::pair<std::
             b.isNull() || b.toString().trimmed().isEmpty())
             break;
         bool v;
-        result.push_back(std::make_pair(a.toString().trimmed().toUtf8().toStdString(), b.toInt(&v)));
+        result.push_back({a.toString().trimmed().toUtf8().toStdString(), b.toInt(&v)});
         if(!v)
         {
             display_info(QObject::tr("错误"),QObject::tr("站点或线路文件第二列含有非数字，请修改后重新打开软件"));
@@ -74,7 +74,7 @@ void readXlsx(const std::filesystem::path& filename, std::vector<std::pair<std::
     return;
 }
 
-void readXlsx(const std::filesystem::path& filename, std::unordered_map<std::string, int> &result)
+void readXlsx(const std::filesystem::path& filename, std::unordered_multimap<std::string, int> &result)
 {
     result.clear();
 
@@ -92,7 +92,7 @@ void readXlsx(const std::filesystem::path& filename, std::unordered_map<std::str
             b.isNull() || b.toString().trimmed().isEmpty())
             break;
         bool v;
-        result.insert(std::make_pair(a.toString().trimmed().toUtf8().toStdString(), b.toInt(&v)));
+        result.insert({a.toString().trimmed().toUtf8().toStdString(), b.toInt(&v)});
         if(!v)
         {
             display_info(QObject::tr("错误"),QObject::tr("站点或线路文件第二列含有非数字，请修改后重新打开软件"));
@@ -179,39 +179,6 @@ EndingType checkEnding(const std::string& input) {
     }
 
     return EndingType::NO_MATCH;
-}
-
-bool text_to_vector(const std::string& input, std::vector<std::pair<std::string, int>> &output)
-{
-    std::stringstream ss(input);
-    std::string line;
-    bool isnum = false;
-    std::pair<std::string, int> temp;
-    if(input.empty())
-        return 0;
-    while(std::getline(ss, line,'\n'))
-    {
-        if(line.empty())
-            continue;
-        if(isnum == false)
-            temp.first = line;
-        else
-        {
-            try{
-            temp.second = std::stoi(line);
-            }catch(std::invalid_argument& e)
-            {
-                display_info(QObject::tr("错误"),QObject::tr("站点或线路输入信息的某一组内的第二行含有非数字"));
-                output.clear();
-                output.shrink_to_fit();
-                return 0;
-            }
-
-            output.push_back(temp);
-        }
-        isnum = !isnum;
-    }
-    return 1;
 }
 
 void display_info(const QString& head, const QString& info)
@@ -736,7 +703,7 @@ arrdeptime operator-(arrdeptime a, arrdeptime b)
 
 
 
-bool printq(const QString& q, const QString& p)
+bool printq(const QString& prefix, const QString& content, const QString& suffix)
 {
 
     QDialog dialog;
@@ -745,16 +712,16 @@ bool printq(const QString& q, const QString& p)
     QVBoxLayout *mainLayout = new QVBoxLayout(&dialog);
 
     // 上面的文本
-    mainLayout->addWidget(new QLabel(QObject::tr("时刻表表单数据如下：")));
+    mainLayout->addWidget(new QLabel(prefix));
 
     // 中间的长文本区域
     QTextEdit *textEdit = new QTextEdit;
-    textEdit->setPlainText(q);
+    textEdit->setPlainText(content);
     textEdit->setReadOnly(true);
     mainLayout->addWidget(textEdit);
 
     // 下面的文本
-    mainLayout->addWidget(new QLabel(p));
+    mainLayout->addWidget(new QLabel(suffix));
 
     // 按钮行
     QHBoxLayout *buttonLayout = new QHBoxLayout;
@@ -845,6 +812,14 @@ errortype::errortype(int type, QString q)
             output = QString(QObject::tr("未安装时刻表mod"));
             break;
 
+        case MULTI_STATION:
+            output = QString(QObject::tr("时刻表内的%1站点存在重名").arg(q));
+            break;
+
+        case MULTI_LINE:
+            output = QString(QObject::tr("时刻表内的%1线路存在重名").arg(q));
+            break;
+
         default:
             output = QObject::tr("其他");
             break;
@@ -868,10 +843,74 @@ void refresh_file(const my_data &sdata)
     file << sdata.invalid_if << '\n';
     file << sdata.clear_if << '\n';
     file << sdata.pile_if << '\n';
+    file << sdata.d_station_add << '\n';
+    file << sdata.d_line_add << '\n';
 
     file.close();
 }
 
 
+void read_id_data(const std::filesystem::path& filePath,
+                  std::vector<std::pair<std::string, int>>& data,
+                  IDtype type)
+{
+    std::ifstream file(filePath);
 
+    std::string match = (type == IDtype::STATION ? "stations = {" : "lines = {");
+    std::string line;
+    bool inModSection = false;
+    bool in_area = false;
+
+    while (std::getline(file, line)) {
+        // 1. 查找 ["your_mod.lua"] 行
+        if (!inModSection && line.find("[\"timetable_idget.lua\"]") != std::string::npos) {
+            inModSection = true;
+            continue;
+        }
+
+        // 2. 如果不在我们的mod部分，跳过
+        if (!inModSection) continue;
+
+        // 3. 检查是否进入stations或lines部分
+        if (line.find(match) != std::string::npos) {
+            in_area = true;
+            continue;
+        }
+
+        // 4. 检查是否结束当前部分
+        if (line.find("}") != std::string::npos) {
+            if (!in_area) {
+                continue;
+            } else {
+                // 结束整个mod部分
+                break;
+            }
+        }
+
+        // 5. 解析数据行（格式固定为: [数字] = "名称",）
+        if (in_area) {
+            // 格式示例: [1001] = "中央车站",
+            size_t bracketStart = line.find('[');
+            size_t bracketEnd = line.find(']');
+            size_t quoteStart = line.find('"');
+            size_t quoteEnd = line.find('"', quoteStart + 1);
+
+            if (bracketStart != std::string::npos && bracketEnd != std::string::npos &&
+                quoteStart != std::string::npos && quoteEnd != std::string::npos) {
+
+                // 提取ID
+                std::string idStr = line.substr(bracketStart + 1, bracketEnd - bracketStart - 1);
+                int id = std::stoi(idStr);
+
+                // 提取名称
+                std::string name = line.substr(quoteStart + 1, quoteEnd - quoteStart - 1);
+
+                data.push_back({name, id});
+            }
+        }
+    }
+
+
+    file.close();
+}
 

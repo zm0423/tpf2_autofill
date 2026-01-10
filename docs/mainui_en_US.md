@@ -59,6 +59,7 @@
 
 2.  **Name Matching**:
     *   Ensure that **station names** and **route names** in the timetable files **exactly match** the data from the game save (only leading/trailing spaces are allowed).
+    *   **Make sure the data you actually use is unique**: No matter line or station, if you use this name in your timetable data, make sure it is unique.
 
 3.  **Duplicate Data Handling**:
     *   If completely duplicate timetable data is detected, or if the arrival/departure times between two sets of data differ by less than 5 seconds, the program will **automatically merge** these duplicates and prompt you before import.
@@ -73,6 +74,6 @@
 ---
 
 If you encounter any issues, please contact me via the **"About" section** within the software.  
-Bilibili Private Message, GitHub Issues, or email are all acceptable.
+Bilibili Message, GitHub Issues, or email are all acceptable.
 
 Thank you for using!

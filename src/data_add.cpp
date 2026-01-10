@@ -32,11 +32,42 @@ data_add::data_add(my_data &input_data, QWidget *parent)
     ui->checkBox->setChecked(sdata.trunc_if);
     ui->checkBox->setText(QString(tr("截断\"%1\"以后内容")).arg(sdata.trunc));
     setWindowTitle(tr("站点、线路数据导入"));
+
+    ui->label->setTextInteractionFlags(Qt::TextSelectableByMouse);
+
+    station_group = new QButtonGroup(this);
+    station_group->addButton(ui->opt_station_cover, COVER);
+    station_group->addButton(ui->opt_station_add, ADD);
+
+    line_group = new QButtonGroup(this);
+    line_group->addButton(ui->opt_line_cover, COVER);
+    line_group->addButton(ui->opt_line_add, ADD);
+
+    QObject::connect(station_group, &QButtonGroup::idClicked,
+                     this, [&](int p) {
+                         sdata.d_station_add = p;
+                         refresh_file(sdata);
+                     });
+
+    QObject::connect(line_group, &QButtonGroup::idClicked,
+                     this, [&](int p) {
+                         sdata.d_line_add = p;
+                         refresh_file(sdata);
+                     });
+
+
     QObject::connect(ui->checkBox, &QCheckBox::toggled,
                      this, [&](bool p) {
                          sdata.trunc_if = p;
                          refresh_file(sdata);
                      });
+
+    ui->opt_line_add->setChecked(sdata.d_line_add == ADD);
+    ui->opt_line_cover->setChecked(sdata.d_line_add == COVER);
+    ui->opt_station_add->setChecked(sdata.d_line_add == ADD);
+    ui->opt_station_cover->setChecked(sdata.d_line_add == COVER);
+
+
 }
 
 data_add::~data_add()
@@ -44,54 +75,65 @@ data_add::~data_add()
     delete ui;
 }
 
-void data_add::on_station_copy_clicked()
-{
-    copyToClipboard(stationcpy);
-    display_info(tr("提示"), tr("站点复制代码已复制至粘贴板！"));
-}
-
-
-void data_add::on_line_copy_clicked()
-{
-    copyToClipboard(linecpy);
-    display_info(tr("提示"), tr("线路复制代码已复制至粘贴板！"));
-}
-
-
 void data_add::on_station_input_clicked()
 {
-    std::string dat = ui->textEdit->toPlainText().toStdString();
-    if(dat.empty())
-        return;
-    std::vector<std::pair<std::string, int>> linedat;
+    readXlsx(sdata.folder_dir / (sdata.sg_name + u8"_station.xlsx"), sdata.station);
+
+    std::vector<std::pair<std::string, int>> station_dat;
+
+    read_id_data(sdata.sg_dir, station_dat, IDtype::STATION);
 
 
-
-    if(!text_to_vector(dat, linedat))
-        return;
-
-    if(linedat.empty())
+    if(station_dat.empty())
     {
-        display_info(tr("错误"),tr("数据过少"));
+        display_info(tr("错误"),tr("未找到存档内站点数据，请检查辅助mod是否安装"));
         return;
     }
 
 
-    std::sort(linedat.begin(), linedat.end(),
+    std::sort(station_dat.begin(), station_dat.end(),
               [](const auto& a, const auto& b){
                   return checkEnding(a.first) < checkEnding(b.first);
               });
 
+    QString prefix = tr("读取的数据如下");
+    QString content;
+    QString suffix = QString(tr("模式为%1，是否继续？").arg(sdata.d_station_add ? tr("仅添加"):tr("覆盖")));
 
+    for(const auto& [name, id] :station_dat)
+        content += QString(tr("%1: %2\n").arg(name).arg(id));
 
-    if(!writeVectorToXlsx(linedat, sdata.folder_dir / (sdata.sg_name + "_station.xlsx")))
+    if(!printq(prefix, content, suffix))
         return;
 
-    sdata.station.clear();
-    sdata.station.insert(linedat.cbegin(), linedat.cend());
+    std::vector<std::pair<std::string, int>> local_station_dat;
+
+    readXlsx(sdata.folder_dir / (sdata.sg_name + u8"_station.xlsx"), local_station_dat);
+
+    if(sdata.d_station_add == COVER)
+    {
+        sdata.station.clear();
+        sdata.station.insert(station_dat.cbegin(), station_dat.cend());
+        local_station_dat = station_dat;
+    }
+    else
+    {
+        std::unordered_set<int> local;
+        for(const auto &[name, id] : sdata.station)
+            local.insert(id);
+        for(const auto &[name, id] : station_dat)
+            if(local.find(id) == local.end())
+            {
+                local_station_dat.push_back({name, id});
+                sdata.station.insert({name, id});
+            }
+    }
 
 
-    ui->textEdit->setText("");
+    if(!writeVectorToXlsx(local_station_dat, sdata.folder_dir / (sdata.sg_name + "_station.xlsx")))
+        return;
+
+
 
     display_info(tr("提示"),tr("站点数据导入成功，若需更改请查看 存档名_station.xlsx"));
 
@@ -101,29 +143,26 @@ void data_add::on_station_input_clicked()
 
 void data_add::on_line_input_clicked()
 {
-    std::string dat = ui->textEdit->toPlainText().toStdString();
-    if(dat.empty())
-        return;
-    std::vector<std::pair<std::string, int>> linedat;
+    readXlsx(sdata.folder_dir / (sdata.sg_name + u8"_line.xlsx"), sdata.line);
+    std::vector<std::pair<std::string, int>> line_dat;
 
-    if(!text_to_vector(dat, linedat))
-        return;
+    read_id_data(sdata.sg_dir, line_dat, IDtype::LINE);
 
-    if(linedat.empty())
+    if(line_dat.empty())
     {
-        display_info(tr("错误"),tr("数据过少"));
+        display_info(tr("错误"),tr("未找到存档内线路数据，请检查辅助mod是否安装"));
         return;
     }
 
     sdata.trunc_if = ui->checkBox->isChecked();
 
-    std::vector<int> tags(linedat.size());
+    std::vector<int> tags(line_dat.size());
 
     std::vector<std::pair<int, int>> temp;
-    temp.reserve(linedat.size());
+    temp.reserve(line_dat.size());
     int i = 0;
 
-    std::transform(linedat.begin(), linedat.end(),
+    std::transform(line_dat.begin(), line_dat.end(),
                     std::back_inserter(temp),
                     [&](auto& p){
                             int tag = sdata.trunc_if ? (get_first_cut(p.first, sdata.trunc) ? 1 : 0) : 0;
@@ -134,22 +173,42 @@ void data_add::on_line_input_clicked()
                                 if(p1.second != p2.second)
                                     return p1.second > p2.second;
                                 else
-                                    return linedat.at(p1.first).first < linedat.at(p2.first).first;
+                                    return line_dat.at(p1.first).first < line_dat.at(p2.first).first;
         });
 
+    QString prefix = tr("读取的（截断后）数据如下");
+    QString content;
+    QString suffix = QString(tr("模式为%1，是否继续？").arg(sdata.d_line_add ? tr("仅添加"):tr("覆盖")));
 
+    for(const auto& [pos, tag] :temp)
+        content += QString(tr("%1: %2\n").arg(line_dat[pos].first).arg(line_dat[pos].second));
 
-
-    if(!writeVectorToXlsx(linedat, sdata.folder_dir / (sdata.sg_name + "_line.xlsx"), temp))
+    if(!printq(prefix, content, suffix))
         return;
 
 
+
+    if(sdata.d_line_add == COVER)
+    {
+        sdata.line.clear();
+        for(const auto& [pos, tag] :temp)
+            sdata.line.push_back({line_dat[pos].first, line_dat[pos].second});
+    }
+
+    else
+    {
+        std::unordered_set<int> local;
+        for(const auto &[name, id] : sdata.line)
+            local.insert(id);
+        for(const auto& [pos, tag] :temp)
+            if(local.find(line_dat[pos].second) == local.end())
+                sdata.line.push_back({line_dat[pos].first, line_dat[pos].second});
+    }
+
+    if(!writeVectorToXlsx(sdata.line, sdata.folder_dir / (sdata.sg_name + "_line.xlsx")))
+        return;
+
     display_info(tr("提示"),tr("线路数据导入成功，若需更改请查看 存档名_line.xlsx"));
-
-    ui->textEdit->setText("");
-
-    sdata.line = std::move(linedat);
-
 
     return;
 
@@ -249,5 +308,6 @@ void data_add::on_instruction_clicked()
     QString title = tr("说明");
     SimpleWebMarkdownDialog::showDialog(title, markdown, this);
 }
+
 
 

@@ -54,7 +54,7 @@ mainui::mainui(QWidget *parent)
     m_clearGroup->addButton(ui->clear_1, 1);
     m_clearGroup->addButton(ui->clear_2, 2);
     m_clearGroup->addButton(ui->clear_3, 3);
-    setWindowTitle(tr("狂热运输2 时刻表自动输入"));
+    setWindowTitle(tr("狂热运输2 时刻表自动输入") + tr(" V1.2"));
 
     QObject::connect(m_easyGroup, &QButtonGroup::idClicked,
                      this, [&](int p) {
@@ -85,7 +85,6 @@ mainui::mainui(QWidget *parent)
                          sdata.pile_if = p;
                          refresh_file(sdata);
                      });
-
 
     QTimer::singleShot(0, this, &mainui::init);
 }
@@ -132,6 +131,12 @@ void mainui::init()
 
         if(getline(sys_file,buf,'\n'))
             sdata.pile_if = std::stoi(buf);
+
+        if(getline(sys_file,buf,'\n'))
+            sdata.d_station_add = std::stoi(buf);
+
+        if(getline(sys_file,buf,'\n'))
+            sdata.d_line_add = std::stoi(buf);
 
         read_station_line();
 
@@ -207,6 +212,7 @@ mainui::~mainui()
 void mainui::on_input_data_clicked()
 {
     refresh_file(sdata);
+    read_station_line();
     if(sdata.folder_dir.empty())
     {
         display_info(tr("提示"), tr("请先选取工作文件夹"));
@@ -217,6 +223,7 @@ void mainui::on_input_data_clicked()
         display_info(tr("提示"), tr("请先选取存档"));
         return;
     }
+    read_station_line();
     data_add *adding = new data_add(sdata);
     adding->setAttribute(Qt::WA_DeleteOnClose);
     connect(adding, &data_add::destroyed, this, &mainui::refresh);
@@ -375,25 +382,36 @@ bool mainui::get_list(std::vector<std::pair<int, std::vector<std::pair<QString, 
 
     std::string prefix = sdata.xls_if ? ".xlsx" : ".csv";
 
+    std::unordered_multiset<std::string> count;
+    for(const auto &[name, id]:sdata.line)
+        count.insert(name);
 
     if(sdata.easy_if)
     {
-        for(auto &p : sdata.line)
+
+
+        for(const auto &[name, id] : sdata.line)
         {
             std::vector<std::pair<QString, QString>> vec;
 
             for(int i = 0;;++i)
             {
-                fs::path temppath = sdata.folder_dir / (p.first + file_sufix(i) + prefix);
+                fs::path temppath = sdata.folder_dir / (name + file_sufix(i) + prefix);
 
                 QString o = stq(temppath.u8string());
 
                 if(!fs::exists(temppath))
                     break;
 
+                if(count.count(name) > 1)
+                {
+                    errortype e{errortype::MULTI_LINE, stq(name)};
+                    return false;
+                }
+
                 if(!sdata.xls_if)
                 {
-                    vec.push_back(std::make_pair(stq(temppath.u8string()), ""));
+                    vec.push_back({stq(temppath.u8string()), ""});
                     continue;
                 }
 
@@ -408,7 +426,7 @@ bool mainui::get_list(std::vector<std::pair<int, std::vector<std::pair<QString, 
                                [&](const auto &a){return std::make_pair(qfilename, a);});
             }
             if(!vec.empty())
-                list.push_back(std::make_pair(p.second, vec));
+                list.push_back({id, vec});
         }
     }
     else
@@ -436,6 +454,12 @@ bool mainui::get_list(std::vector<std::pair<int, std::vector<std::pair<QString, 
                 return false;
             }
 
+            if(count.count(it->first) > 1)
+            {
+                errortype e{errortype::MULTI_LINE, stq(it->first)};
+                return false;
+            }
+
             int id = it->second;
 
             for(int j = 2;;j += 2)
@@ -453,23 +477,23 @@ bool mainui::get_list(std::vector<std::pair<int, std::vector<std::pair<QString, 
 
                 if(!sdata.xls_if)
                 {
-                    vec.push_back(std::make_pair(filename, ""));
+                    vec.push_back({filename, ""});
                     continue;
                 }
 
                 QVariant sheetv = doc.read(i, j + 1);
 
                 if(sheetv.isNull() || sheetv.toString().trimmed().isEmpty())
-                    vec.push_back(std::make_pair(filename, ""));
+                    vec.push_back({filename, ""});
                 else
                 {
                     QStringList sheet = sheetv.toString().trimmed().split(" ", Qt::SkipEmptyParts);
                     for(auto &s:sheet)
-                        vec.push_back(std::make_pair(filename, s.trimmed()));
+                        vec.push_back({filename, s.trimmed()});
                 }
             }
             if(!vec.empty())
-                list.push_back(std::make_pair(id, vec));
+                list.push_back({id, vec});
             ++i;
         }
     }
@@ -683,6 +707,11 @@ bool mainui::get_data(std::vector<std::pair<int, std::vector<std::pair<QString, 
 
                 for(auto &dat:data)
                 {
+                    if(sdata.station.count(dat.col2) > 1)
+                    {
+                        errortype e{errortype::MULTI_STATION, stq(dat.col2)};
+                        return false;
+                    }
                     auto it = sdata.station.find(dat.col2);
                     if(it == sdata.station.end())
                     {
@@ -740,6 +769,12 @@ bool mainui::get_data(std::vector<std::pair<int, std::vector<std::pair<QString, 
                             arrtime.isNull() || arrtime.toString().trimmed().isEmpty() ||
                             deptime.isNull() || deptime.toString().trimmed().isEmpty() )
                         break;
+
+                    if(sdata.station.count(sta.toString().trimmed().toUtf8().toStdString()) > 1)
+                    {
+                        errortype e{errortype::MULTI_STATION, sta.toString()};
+                        return false;
+                    }
 
                     auto it = sdata.station.find(sta.toString().trimmed().toUtf8().toStdString());
                     if(it == sdata.station.end())
@@ -902,58 +937,59 @@ bool mainui::get_data(std::vector<std::pair<int, std::vector<std::pair<QString, 
     progressDialog.setValue(leng.size());
     progressDialog.close();
 
+    QString prefix = tr("时刻表数据如下");
 
-    QString q;
+    QString content;
 
     for (int i = 0;i < output.size();++i)
     {
-        q += QString(tr("%1 : %2组数据"))
+        content += QString(tr("%1 : %2组数据"))
                  .arg(get_linename(sdata.line, output[i].first))
                  .arg(shrink_num[i]);
         if(shrink_if[i])
-            q += tr("     包含相近或重复数据");
+            content += tr("     包含相近或重复数据");
         QString last;
         for(auto &p :list[i].second)
         {
             if(last != p.first)
             {
-                q += "\n";
+                content += "\n";
                 last = p.first;
-                q += QFileInfo(p.first).fileName();
-                q += ":";
-                q += p.second.size() ? p.second : QFileInfo(p.first).baseName();
+                content += QFileInfo(p.first).fileName();
+                content += ":";
+                content += p.second.size() ? p.second : QFileInfo(p.first).baseName();
             }
             else
             {
-                q += "  ";
-                q += p.second.size() ? p.second : QFileInfo(p.first).baseName();
+                content += "  ";
+                content += p.second.size() ? p.second : QFileInfo(p.first).baseName();
             }
         }
-        q += "\n";
-        q += "\n";
+        content += "\n";
+        content += "\n";
     }
 
-    QString p;
+    QString suffix;
     switch (sdata.clear_if) {
     case 1:
-        p += tr("当前为覆盖模式，即仅添加或更新现有时刻表\n");
+        suffix += tr("当前为覆盖模式，即仅添加或更新现有时刻表\n");
         break;
     case 2:
-        p += tr("当前为列表清空，即仅清空_line文件内包含的列表\n");
+        suffix += tr("当前为列表清空，即仅清空_line文件内包含的列表\n");
         break;
     case 3:
-        p += tr("当前为全部清空模式，即删除所有原时刻表\n");
+        suffix += tr("当前为全部清空模式，即删除所有原时刻表\n");
         break;
     default:
         break;
     }
 
-    p += shrinkif ?
+    suffix += shrinkif ?
                     tr("当前时刻表存在重复或者相近（两组或多组时刻表所有站点时刻<5s），\n"
                     "按确认则随机保留一组并继续，按取消则返回") :
                     tr("请核对时刻表数量以及表单，按确认继续");
 
-    if(!printq(q, p))
+    if(!printq(prefix, content, suffix))
         return 0;
 
 
@@ -1057,7 +1093,8 @@ void mainui::on_settinginfo_2_clicked()
 {
     QMessageBox msgBox;
     msgBox.setTextFormat(Qt::RichText);
-    msgBox.setText(QString(QObject::tr("作者：今天学高代了吗<br/>"
+    msgBox.setText("Version 1.2<br/>" +
+        QString(QObject::tr("作者：今天学高代了吗<br/>"
                                        "b站视频教程：<a href=\"https://www.bilibili.com/video/BV1yj2ABwE9v/"
                                        "?spm_id_from=333.1387.homepage.video_card.click&vd_source=3fd42c24215ba0da48b95a40864f298c\">"
                                        "https://www.bilibili.com/video/BV1yj2ABwE9v</a> <br/>"

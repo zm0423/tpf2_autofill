@@ -19,7 +19,7 @@ inline QString stq(const std::string &s){return QString::fromStdString(s);}
 
 struct my_data
 {
-    std::unordered_map<std::string, int> station{};
+    std::unordered_multimap<std::string, int> station{};
     std::vector<std::pair<std::string, int>> line{};
 
     std::string folder_name{};
@@ -40,6 +40,9 @@ struct my_data
     bool invalid_if{};
     int clear_if{1};
     bool pile_if{};
+
+    bool d_station_add{};
+    bool d_line_add{};
 };
 
 const std::filesystem::path sys_file_name{"tpf2_autofill.dat"};
@@ -124,6 +127,9 @@ public:
 
         NO_TIMETABLE_MOD,
 
+        MULTI_STATION,
+        MULTI_LINE,
+
     };
 
     explicit errortype(int type, QString q = "");
@@ -133,7 +139,7 @@ bool get_first_cut(std::string& linename, const char token);
 
 
 
-void readXlsx(const std::filesystem::path& filename, std::unordered_map<std::string, int> &result);
+void readXlsx(const std::filesystem::path& filename, std::unordered_multimap<std::string, int> &result);
 
 void readXlsx(const std::filesystem::path& filename, std::vector<std::pair<std::string, int>> &result);
 
@@ -151,11 +157,6 @@ enum class EndingType : int{
 };
 
 EndingType checkEnding(const std::string& input);
-
-bool text_to_vector(const std::string& input, std::vector<std::pair<std::string, int>> &output);
-
-
-
 
 bool write_to_lua(const std::filesystem::path& filename,
                   const std::string& data,
@@ -183,8 +184,16 @@ std::vector<CSVData> readCSV(const std::filesystem::path& filePath);
 
 std::pair<int, int> read_xlsx_time(QVariant value);
 
-bool printq(const QString& q,const QString& p);
+bool printq(const QString& prefix, const QString& content, const QString& suffix);
 
+enum class IDtype : int{
+    STATION,
+    LINE,
+};
+
+void read_id_data(const std::filesystem::path& filePath,
+                  std::vector<std::pair<std::string, int>>& data,
+                  IDtype type);
 
 
 
