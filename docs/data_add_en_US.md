@@ -3,7 +3,7 @@
 The game's underlying code only recognizes numeric IDs, so you must obtain them from within the game.
 
 1. **Download and activate assist mod**
-   - Download "Timetable autofill program assist tool" mod in the workshop.
+   - Download "**Timetable autofill program assist tool**" mod in the workshop.
    - Activate it in your save game and save it.
 
 2. **Import Data into the Software:**

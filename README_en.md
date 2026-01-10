@@ -16,7 +16,7 @@ Go to the [Releases](https://github.com/zm0423/tpf2_autofill/releases) page, dow
 ## Basic Steps
 <div align="center">
 <img src="./images/7.png" width="60%" alt="Main Interface"><br>
-<small><em>Interface 1</em></small>
+<small><em>Interface</em></small>
 </div>
 
 1.  **Select Root Directory Folder**
@@ -29,7 +29,7 @@ Go to the [Releases](https://github.com/zm0423/tpf2_autofill/releases) page, dow
     >   **Tip**: You can also locate it in-game via **Settings → Advanced → Open User Data Folder**.
 
 3. **Download and activate assist mod**
-   - Download "Timetable autofill program assist tool" mod in the workshop.
+   - Download "**Timetable autofill program assist tool**" mod in the workshop.
    - Activate it in your save game and save it.
 
 
