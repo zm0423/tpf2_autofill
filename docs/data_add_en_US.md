@@ -14,4 +14,4 @@ The game's underlying code only recognizes numeric IDs, so you must obtain them 
 **Important:**
 - All data used for timetable synchronization must **match** the IDs you import here (Spaces before or behind is allowed).
 - If anything doesn’t match, you must adjust your data accordingly—whether in the timetable files or in the `_station`/`_line` files—so the software can correctly identify the corresponding IDs.
-- **Make sure the data you actually use is unique**: No matter line or station, if you use this name in your timetable data, make sure it is unique.
+- **Make sure the data you actually use is unique**: No matter line or station, if you use this name in your timetable data, make sure it is unique.(If you do not use that station or line, duplicate is allowed)

@@ -41,7 +41,7 @@ Go to the [Releases](https://github.com/zm0423/tpf2_autofill/releases) page, dow
     > **Important:**
     > **Data Consistency is Crucial**: When performing the "Synchronize Timetables" operation later, the **station names** and **route names** in your timetable data must **exactly match** the data imported here (only leading/trailing spaces are allowed).
     > **Ensure Correct ID Recognition**: Whether you directly modify the timetable files or the generated `_station.xlsx` / `_line.xlsx` files, the ultimate goal is for the software to **correctly match names to the internal game IDs**. If mismatches occur, please check and modify the relevant data yourself.
-    > **Make sure the data you actually use is unique**: No matter line or station, if you use this name in your timetable data, make sure it is unique.
+    > **Make sure the data you actually use is unique**: No matter line or station, if you use this name in your timetable data, make sure it is unique.(If you do not use that station or line, duplicate is allowed)
 
     *   After successful import, two files will be generated: `[SaveName]_station.xlsx` and `[SaveName]_line.xlsx`.
     *   Please verify and modify the data in these files as needed. Changes to the `_line` file affect the **Overwrite Options**.
@@ -91,7 +91,7 @@ Go to the [Releases](https://github.com/zm0423/tpf2_autofill/releases) page, dow
 
 2.  **Name Matching**:
     *   Ensure that **station names** and **route names** in the timetable files **exactly match** the data from the game save (only leading/trailing spaces are allowed).
-    *   **Make sure the data you actually use is unique**: No matter line or station, if you use this name in your timetable data, make sure it is unique.
+    *   **Make sure the data you actually use is unique**: No matter line or station, if you use this name in your timetable data, make sure it is unique.(If you do not use that station or line, duplicate is allowed)
 
 3.  **Duplicate Data Handling**:
     *   If completely duplicate timetable data is detected, or if the arrival/departure times between two sets of data differ by less than 5 seconds, the program will **automatically merge** these duplicates and prompt you before import.
