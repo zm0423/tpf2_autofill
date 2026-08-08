@@ -77,7 +77,7 @@ data_add::~data_add()
 
 void data_add::on_station_input_clicked()
 {
-    readXlsx(sdata.folder_dir / (sdata.sg_name + u8"_station.xlsx"), sdata.station);
+    readXlsx(sdata.folder_dir / fs::u8path(sdata.sg_name + u8"_station.xlsx"), sdata.station);
 
     std::vector<std::pair<std::string, int>> station_dat;
 
@@ -108,7 +108,7 @@ void data_add::on_station_input_clicked()
 
     std::vector<std::pair<std::string, int>> local_station_dat;
 
-    readXlsx(sdata.folder_dir / (sdata.sg_name + u8"_station.xlsx"), local_station_dat);
+    readXlsx(sdata.folder_dir / fs::u8path(sdata.sg_name + u8"_station.xlsx"), local_station_dat);
 
     if(sdata.d_station_add == COVER)
     {
@@ -130,7 +130,7 @@ void data_add::on_station_input_clicked()
     }
 
 
-    if(!writeVectorToXlsx(local_station_dat, sdata.folder_dir / (sdata.sg_name + "_station.xlsx")))
+    if(!writeVectorToXlsx(local_station_dat, sdata.folder_dir / fs::u8path(sdata.sg_name + "_station.xlsx")))
         return;
 
 
@@ -143,7 +143,7 @@ void data_add::on_station_input_clicked()
 
 void data_add::on_line_input_clicked()
 {
-    readXlsx(sdata.folder_dir / (sdata.sg_name + u8"_line.xlsx"), sdata.line);
+    readXlsx(sdata.folder_dir / fs::u8path(sdata.sg_name + u8"_line.xlsx"), sdata.line);
     std::vector<std::pair<std::string, int>> line_dat;
 
     read_id_data(sdata.sg_dir, line_dat, IDtype::LINE);
@@ -205,7 +205,7 @@ void data_add::on_line_input_clicked()
                 sdata.line.push_back({line_dat[pos].first, line_dat[pos].second});
     }
 
-    if(!writeVectorToXlsx(sdata.line, sdata.folder_dir / (sdata.sg_name + "_line.xlsx")))
+    if(!writeVectorToXlsx(sdata.line, sdata.folder_dir / fs::u8path(sdata.sg_name + "_line.xlsx")))
         return;
 
     display_info(tr("提示"),tr("线路数据导入成功，若需更改请查看 存档名_line.xlsx"));

@@ -156,7 +156,7 @@ void mainui::init()
         ui->pile_if->setChecked(sdata.pile_if);
 
         refresh();
-        if(!fs::exists(sdata.folder_dir / (sdata.sg_name + "_list.xlsx")))
+        if(!fs::exists(sdata.folder_dir / fs::u8path(sdata.sg_name + "_list.xlsx")))
         {
             QXlsx::Document doc;
             QXlsx::Format songTi20;
@@ -172,9 +172,9 @@ void mainui::init()
             doc.write(1, 5, tr("表单名称"));
             doc.write(1, 6, "...");
 
-            doc.saveAs(stq((sdata.folder_dir / (sdata.sg_name + "_list.xlsx")).u8string()));
+            doc.saveAs(stq((sdata.folder_dir / fs::u8path(sdata.sg_name + "_list.xlsx")).u8string()));
 
-            QString q = tr("未检测到列表文件，已自动生成") + stq((sdata.folder_dir / (sdata.sg_name + "_list.xlsx")).u8string());
+            QString q = tr("未检测到列表文件，已自动生成") + stq((sdata.folder_dir / fs::u8path(sdata.sg_name + "_list.xlsx")).u8string());
             q += tr("，如采用列表模式请编辑该文件\n格式见文档，每行一个线路，如有更多文件请向后加。"
                  "对于文件中的某些表单，请以空格分隔。"
                  "如果需要一个文件里的所有表单请空置“表单名称”栏目，第一行仅做说明，可随意更改。");
@@ -322,7 +322,7 @@ bool mainui::get_sg()
     sdata.sg_name = sg_name;
     sdata.sg_dir = sg;
 
-    if(!fs::exists(sdata.folder_dir / (sg_name + "_list.xlsx")))
+    if(!fs::exists(sdata.folder_dir / fs::u8path(sg_name + "_list.xlsx")))
     {
         QXlsx::Document doc;
         QXlsx::Format songTi20;
@@ -338,9 +338,9 @@ bool mainui::get_sg()
         doc.write(1, 5, tr("表单名称"));
         doc.write(1, 6, "...");
 
-        doc.saveAs(stq((sdata.folder_dir / (sdata.sg_name + "_list.xlsx")).u8string()));
+        doc.saveAs(stq((sdata.folder_dir / fs::u8path(sdata.sg_name + "_list.xlsx")).u8string()));
 
-        QString q = tr("未检测到列表文件，已自动生成") + stq((sdata.folder_dir / (sdata.sg_name + "_list.xlsx")).u8string());
+        QString q = tr("未检测到列表文件，已自动生成") + stq((sdata.folder_dir / fs::u8path(sdata.sg_name + "_list.xlsx")).u8string());
         q += tr("，如采用列表模式请编辑该文件\n格式见文档，每行一个线路，如有更多文件请向后加。"
              "对于文件中的某些表单，请以空格分隔。"
              "如果需要一个文件里的所有表单请空置“表单名称”栏目，第一行仅做说明，可随意更改。");
@@ -363,8 +363,8 @@ bool mainui::get_sg()
 
 void mainui::read_station_line()
 {
-    readXlsx(sdata.folder_dir / (sdata.sg_name + u8"_station.xlsx"), sdata.station);
-    readXlsx(sdata.folder_dir / (sdata.sg_name + u8"_line.xlsx"), sdata.line);
+    readXlsx(sdata.folder_dir / fs::u8path(sdata.sg_name + u8"_station.xlsx"), sdata.station);
+    readXlsx(sdata.folder_dir / fs::u8path(sdata.sg_name + u8"_line.xlsx"), sdata.line);
 }
 
 
@@ -407,7 +407,7 @@ bool mainui::get_list(std::vector<std::pair<int, std::vector<std::pair<QString, 
 
             for(int i = 0;;++i)
             {
-                fs::path temppath = sdata.folder_dir / (name + file_sufix(i) + prefix);
+                fs::path temppath = sdata.folder_dir / fs::u8path(name + file_sufix(i) + prefix);
 
                 QString o = stq(temppath.u8string());
 
@@ -443,7 +443,7 @@ bool mainui::get_list(std::vector<std::pair<int, std::vector<std::pair<QString, 
     }
     else
     {
-        fs::path file = sdata.folder_dir / (sdata.sg_name + "_list.xlsx");
+        fs::path file = sdata.folder_dir / fs::u8path(sdata.sg_name + "_list.xlsx");
         if(!fs::exists(file))
         {
             errortype e{errortype::LISTMODE_NOLIST};
