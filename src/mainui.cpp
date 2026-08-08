@@ -242,21 +242,32 @@ void mainui::on_sync_all_data_clicked()
     refresh();
     std::vector<std::pair<int, std::vector<std::pair<QString, QString>>>> lists;
 
-    if(!get_list(lists))
-        return;
+    try
+    {
+        if(!get_list(lists))
+            return;
 
-    std::vector<std::pair<int, std::vector<stationinfo>>> data;
+        std::vector<std::pair<int, std::vector<stationinfo>>> data;
 
-    if(!get_data(lists, data))
-        return;
+        if(!get_data(lists, data))
+            return;
 
 
-    std::string all_data;
+        std::string all_data;
 
-    for(auto &[lineid, stationdata]:data)
-        all_data += get_filetext(lineid, stationdata);
+        for(auto &[lineid, stationdata]:data)
+            all_data += get_filetext(lineid, stationdata);
 
-    write_to_lua(sdata.sg_dir, all_data, lists, sdata.line, sdata.clear_if);
+        write_to_lua(sdata.sg_dir, all_data, lists, sdata.line, sdata.clear_if);
+    }
+    catch (const std::filesystem::filesystem_error &e)
+    {
+        display_info(tr("错误"), stq(e.what()));
+    }
+    catch (const std::exception &e)
+    {
+        display_info(tr("错误"), stq(e.what()));
+    }
 
 }
 
@@ -400,7 +411,8 @@ bool mainui::get_list(std::vector<std::pair<int, std::vector<std::pair<QString, 
 
                 QString o = stq(temppath.u8string());
 
-                if(!fs::exists(temppath))
+                std::error_code ec;
+                if(!fs::exists(temppath, ec) || ec)
                     break;
 
                 if(count.count(name) > 1)
