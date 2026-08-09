@@ -25,10 +25,10 @@
 
 
 
-bool removeStructure(std::string& text, size_t start, size_t& end);
-void processRemoveSelected(std::string& text, size_t start, size_t end,
-                           const std::unordered_set<int>& numbersToRemove);
-void processRemoveAll(std::string& text, size_t start, size_t end);
+bool find_next_entry(const std::string& text, size_t start, size_t end,
+                     int& lid, size_t& entryStart, size_t& bodyStart, size_t& bodyEnd);
+size_t find_entry_end(const std::string& text, size_t bodyStart);
+bool remove_field(std::string& text, size_t start, size_t end, const std::string& name);
 
 
 
@@ -216,69 +216,194 @@ bool write_to_lua(const std::filesystem::path& filename,
                      std::istreambuf_iterator<char>());
     infile.close();
 
-    std::unordered_set<int> numbersToRemove;
+    std::unordered_set<int> toReplace;
+    std::unordered_set<int> toClear;
+    bool clearAll = false;
+
     if(clear_if == 1)
         for(auto &p:id)
-            numbersToRemove.emplace(p.first);
-    else if (clear_if == 2)
+            toReplace.emplace(p.first);
+    else if(clear_if == 2)
         for(auto &p:line)
-            numbersToRemove.emplace(p.second);
+            toClear.emplace(p.second);
+    else if(clear_if == 3)
+        clearAll = true;
 
-
-
-    size_t insertPos = std::string::npos;
+    // 解析生成的数据：按线路ID缓存整块文本和内部字段文本
+    std::unordered_map<int, std::string> fullBlocks;
+    std::unordered_map<int, std::string> innerBlocks;
+    {
+        size_t i = 0;
+        while(i < data.size())
+        {
+            size_t bs = data.find('[', i);
+            if(bs == std::string::npos)
+                break;
+            size_t p = bs + 1;
+            if(p < data.size() && data[p] == '"')
+                ++p;
+            size_t ds = p;
+            while(p < data.size() && std::isdigit(static_cast<unsigned char>(data[p])))
+                ++p;
+            if(p == ds)
+                break;
+            int lid = std::stoi(data.substr(ds, p - ds));
+            size_t eq = data.find('=', p);
+            if(eq == std::string::npos)
+                break;
+            size_t lb = data.find('{', eq);
+            if(lb == std::string::npos)
+                break;
+            int bc = 1;
+            size_t b = lb + 1;
+            for(; b < data.size() && bc > 0; ++b)
+            {
+                if(data[b] == '{')
+                    ++bc;
+                else if(data[b] == '}')
+                    --bc;
+            }
+            if(bc != 0)
+                break;
+            size_t rb = b - 1;
+            std::string inner = data.substr(lb + 1, rb - lb - 1);
+            while(!inner.empty() && (inner.front() == '\n' || inner.front() == '\r'))
+                inner.erase(inner.begin());
+            while(!inner.empty() && (inner.back() == '\n' || inner.back() == '\r' ||
+                                     inner.back() == '\t' || inner.back() == ' '))
+                inner.pop_back();
+            inner += "\n";
+            innerBlocks[lid] = std::move(inner);
+            size_t blockEnd = rb + 1;
+            if(blockEnd < data.size() && data[blockEnd] == ',')
+                ++blockEnd;
+            if(blockEnd < data.size() && data[blockEnd] == '\n')
+                ++blockEnd;
+            fullBlocks[lid] = data.substr(bs, blockEnd - bs);
+            i = blockEnd;
+        }
+    }
 
     // 查找 timetable 块
     size_t pos = text.find("timetable = {");
-    if (pos == std::string::npos) {
+    if(pos == std::string::npos)
+    {
         errortype{errortype::NO_TIMETABLE_MOD};
         return false;
     }
 
-
-    size_t bracePos = pos + 12;  // "timetable = " 长度
-
-    if (bracePos + 1 < text.size() && text[bracePos + 1] == '\n') {
-        insertPos = bracePos + 2;
-    } else {
-        text.insert(bracePos + 1, "\n");
-        insertPos = bracePos + 2;
+    size_t blockStart = pos + 12; // "timetable = " 长度
+    if(blockStart >= text.size() || text[blockStart] != '{')
+    {
+        errortype{errortype::NO_TIMETABLE_MOD};
+        return false;
     }
 
-    // 查找 timetable 块的结束
+    // 匹配 timetable 块的结束位置
     int braceCount = 1;
-    size_t end = pos + 13; // "timetable = {" 长度
+    size_t blockEnd = blockStart + 1;
+    for(; blockEnd < text.size() && braceCount > 0; ++blockEnd)
+    {
+        if(text[blockEnd] == '{')
+            braceCount++;
+        else if(text[blockEnd] == '}')
+            braceCount--;
+    }
+    if(braceCount != 0)
+    {
+        errortype{errortype::NO_TIMETABLE_MOD};
+        return false;
+    }
+    --blockEnd; // 指向 '}'
 
-    for (size_t i = end; i < text.size() && braceCount > 0; ++i) {
-        if (text[i] == '{') braceCount++;
-        else if (text[i] == '}') braceCount--;
+    // 探测存档使用的键格式：新版为字符串键 ["id"]，旧版为数字键 [id]
+    bool quotedKeys = false;
+    {
+        size_t q = text.find("[\"", blockStart);
+        if(q != std::string::npos && q < blockEnd)
+            quotedKeys = true;
+    }
 
-        if (braceCount == 0) {
-            end = i;
-            break;
+    // 扫描块内所有线路条目（只读）
+    struct Entry { size_t bodyStart; size_t bodyEnd; int lid; };
+    std::vector<Entry> entries;
+    {
+        size_t scan = blockStart + 1;
+        int lid;
+        size_t es, bs, be;
+        while(find_next_entry(text, scan, blockEnd, lid, es, bs, be))
+        {
+            entries.push_back({bs, be, lid});
+            scan = be + 1;
         }
     }
 
-    // 根据模式处理
-    if (clear_if == 3) {
-        processRemoveAll(text, pos, end);
-    } else {
-        processRemoveSelected(text, pos, end, numbersToRemove);
+    // 从后往前处理：只删除/替换受管字段，其余内容保留
+    for(auto it = entries.rbegin(); it != entries.rend(); ++it)
+    {
+        bool needRemove = clearAll || toClear.count(it->lid) || toReplace.count(it->lid);
+        if(!needRemove)
+            continue;
+
+        size_t bodyStart = it->bodyStart;
+        size_t bodyEnd = it->bodyEnd;
+
+        remove_field(text, bodyStart, bodyEnd, "stations");
+        bodyEnd = find_entry_end(text, bodyStart);
+        remove_field(text, bodyStart, bodyEnd, "hasTimetable");
+        bodyEnd = find_entry_end(text, bodyStart);
+        remove_field(text, bodyStart, bodyEnd, "frequency");
+
+        auto innerIt = innerBlocks.find(it->lid);
+        if(innerIt != innerBlocks.end())
+        {
+            std::string inner = innerIt->second;
+            size_t at = bodyStart;
+            if(at < text.size() && text[at] == '\n')
+                ++at;
+            else
+                inner = "\n" + inner;
+            text.insert(at, inner);
+        }
     }
 
-    // 重新计算插入位置
-    if (insertPos != std::string::npos) {
-        size_t newPos = text.find("timetable = {");
-        if (newPos != std::string::npos) {
-            insertPos = text.find('\n', newPos);
-            if (insertPos != std::string::npos) {
-                insertPos++;
+    // 存档中不存在的线路，插入新条目
+    {
+        std::string newBlocks;
+        for(auto &[lid, block] : fullBlocks)
+        {
+            bool exists = false;
+            for(auto &e : entries)
+                if(e.lid == lid)
+                {
+                    exists = true;
+                    break;
+                }
+            if(exists)
+                continue;
+            std::string b = block;
+            if(quotedKeys)
+            {
+                size_t kb = b.find('[');
+                size_t ke = kb == std::string::npos ? std::string::npos : b.find(']', kb);
+                if(kb != std::string::npos && ke != std::string::npos && ke > kb)
+                    b.replace(kb, ke - kb + 1, "[\"" + b.substr(kb + 1, ke - kb - 1) + "\"]");
             }
+            newBlocks += b;
+        }
+        if(!newBlocks.empty())
+        {
+            size_t insertPos = blockStart + 1;
+            if(insertPos < text.size() && text[insertPos] == '\n')
+                ++insertPos;
+            else
+            {
+                text.insert(insertPos, "\n");
+                ++insertPos;
+            }
+            text.insert(insertPos, newBlocks);
         }
     }
-
-    text.insert(insertPos, data);
-
 
     // 3. 生成备份文件名（原文件名_年月日_时分秒.backup）
     auto now = std::chrono::system_clock::now();
@@ -318,190 +443,177 @@ bool write_to_lua(const std::filesystem::path& filename,
 }
 
 /**
- * @brief 处理删除所有结构
+ * @brief 在 [start,end) 内查找下一个 "[id] = {" 或 "[\"id\"] = {" 条目
  */
-void processRemoveAll(std::string& text, size_t start, size_t end) {
+bool find_next_entry(const std::string& text, size_t start, size_t end,
+                     int& lid, size_t& entryStart, size_t& bodyStart, size_t& bodyEnd)
+{
     size_t i = start;
-
-    while (i < end) {
-        // 检查是否匹配 [数字] = { 模式
-        if (text[i] == '[') {
-            // 提取数字
-            size_t numStart = i + 1;
-            size_t numEnd = numStart;
-
-            // 跳过空白找数字开始
-            while (numEnd < end && std::isspace(text[numEnd])) {
-                numEnd++;
-            }
-
-            size_t digitStart = numEnd;
-            while (numEnd < end && std::isdigit(text[numEnd])) {
-                numEnd++;
-            }
-
-            // 检查是否有数字
-            if (digitStart < numEnd) {
-                // 跳过空白找 ]
-                while (numEnd < end && std::isspace(text[numEnd])) {
-                    numEnd++;
-                }
-
-                if (numEnd < end && text[numEnd] == ']') {
-                    size_t closeBracket = numEnd;
-
-                    // 跳过空白找 =
-                    size_t equalsPos = closeBracket + 1;
-                    while (equalsPos < end && std::isspace(text[equalsPos])) {
-                        equalsPos++;
-                    }
-
-                    if (equalsPos < end && text[equalsPos] == '=') {
-                        // 跳过空白找 {
-                        size_t bracePos = equalsPos + 1;
-                        while (bracePos < end && std::isspace(text[bracePos])) {
-                            bracePos++;
-                        }
-
-                        if (bracePos < end && text[bracePos] == '{') {
-                            // 找到完整结构，删除它
-                            if (removeStructure(text, i, end)) {
-                                // 删除成功，继续从当前位置
-                                continue;
-                            }
-                        }
-                    }
-                }
-            }
+    while(i < end)
+    {
+        if(text[i] != '[')
+        {
+            ++i;
+            continue;
         }
-        i++;
-    }
-}
-
-/**
- * @brief 处理删除选定结构
- */
-void processRemoveSelected(std::string& text, size_t start, size_t end,
-                           const std::unordered_set<int>& numbersToRemove) {
-
-    // 为快速查找构建字符串集合
-    std::unordered_set<std::string> patterns;
-    for (int num : numbersToRemove) {
-        patterns.insert("[" + std::to_string(num) + "]");
-    }
-
-    size_t i = start;
-
-    while (i < end) {
-        if (text[i] == '[') {
-            // 查找 ] 的位置
-            size_t closeBracket = text.find(']', i);
-            if (closeBracket == std::string::npos || closeBracket >= end) {
-                i++;
+        size_t p = i + 1;
+        bool quoted = false;
+        if(p < end && text[p] == '"')
+        {
+            quoted = true;
+            ++p;
+        }
+        size_t dStart = p;
+        while(p < end && std::isdigit(static_cast<unsigned char>(text[p])))
+            ++p;
+        if(p == dStart)
+        {
+            ++i;
+            continue;
+        }
+        if(quoted)
+        {
+            if(p < end && text[p] == '"')
+                ++p;
+            else
+            {
+                ++i;
                 continue;
             }
-
-            // 提取括号内的内容
-            std::string bracketContent = text.substr(i, closeBracket - i + 1);
-
-            // 检查是否匹配要删除的模式
-            bool shouldRemove = false;
-            for (const auto& pattern : patterns) {
-                if (bracketContent.find(pattern) != std::string::npos) {
-                    shouldRemove = true;
-                    break;
-                }
-            }
-
-            if (shouldRemove) {
-                // 检查是否是 [数字] = { 完整结构
-                size_t equalsPos = closeBracket + 1;
-                while (equalsPos < end && std::isspace(text[equalsPos])) {
-                    equalsPos++;
-                }
-
-                if (equalsPos < end && text[equalsPos] == '=') {
-                    size_t bracePos = equalsPos + 1;
-                    while (bracePos < end && std::isspace(text[bracePos])) {
-                        bracePos++;
-                    }
-
-                    if (bracePos < end && text[bracePos] == '{') {
-                        // 找到完整结构，删除它
-                        if (removeStructure(text, i, end)) {
-                            // 删除成功，继续从当前位置
-                            continue;
-                        }
-                    }
-                }
-            }
         }
-        i++;
+        if(p >= end || text[p] != ']')
+        {
+            ++i;
+            continue;
+        }
+        size_t e = p + 1;
+        while(e < end && std::isspace(static_cast<unsigned char>(text[e])))
+            ++e;
+        if(e >= end || text[e] != '=')
+        {
+            ++i;
+            continue;
+        }
+        ++e;
+        while(e < end && std::isspace(static_cast<unsigned char>(text[e])))
+            ++e;
+        if(e >= end || text[e] != '{')
+        {
+            ++i;
+            continue;
+        }
+        lid = std::stoi(text.substr(dStart, p - dStart - (quoted ? 1 : 0)));
+        entryStart = i;
+        bodyStart = e + 1;
+        int bc = 1;
+        size_t b = bodyStart;
+        for(; b < end && bc > 0; ++b)
+        {
+            if(text[b] == '{')
+                ++bc;
+            else if(text[b] == '}')
+                --bc;
+        }
+        if(bc != 0)
+        {
+            ++i;
+            continue;
+        }
+        bodyEnd = b - 1;
+        return true;
     }
+    return false;
 }
 
 /**
- * @brief 删除一个完整结构
- * @return 是否成功删除
+ * @brief 从 bodyStart（条目 '{' 之后）匹配出条目结束 '}' 的位置
  */
-bool removeStructure(std::string& text, size_t start, size_t& end) {
-    // 找到匹配的右大括号
-
-    size_t deleteStart = start;
-    while (deleteStart > 0 && text[deleteStart - 1] == '\t') {
-        deleteStart--;
+size_t find_entry_end(const std::string& text, size_t bodyStart)
+{
+    int bc = 1;
+    size_t b = bodyStart;
+    for(; b < text.size() && bc > 0; ++b)
+    {
+        if(text[b] == '{')
+            ++bc;
+        else if(text[b] == '}')
+            --bc;
     }
+    return (bc == 0) ? b - 1 : std::string::npos;
+}
 
-    int braceCount = 0;
-    size_t pos = start;
+/**
+ * @brief 删除 [start,end) 内名为 name 的字段（含整行）
+ */
+bool remove_field(std::string& text, size_t start, size_t end, const std::string& name)
+{
+    size_t i = start;
+    while(i < end)
+    {
+        size_t f = text.find(name, i);
+        if(f == std::string::npos || f >= end)
+            return false;
 
-    // 先找到第一个 {
-    while (pos < text.size() && text[pos] != '{') {
-        pos++;
-    }
-
-    if (pos >= text.size() || text[pos] != '{') {
-        return false;
-    }
-
-    braceCount = 1;
-    size_t structEnd = pos + 1;
-
-    while (structEnd < text.size() && braceCount > 0) {
-        if (text[structEnd] == '{') {
-            braceCount++;
-        } else if (text[structEnd] == '}') {
-            braceCount--;
-        }
-        structEnd++;
-    }
-
-    if (braceCount == 0) {
-        // 检查并包含后面的逗号
-        size_t afterBrace = structEnd;
-        while (afterBrace < text.size() &&
-               (text[afterBrace] == ' ' || text[afterBrace] == '\t' ||
-                text[afterBrace] == '\n' || text[afterBrace] == '\r')) {
-            afterBrace++;
+        char prev = f == 0 ? '\n' : text[f - 1];
+        if(prev != '\n' && prev != '{' && prev != ',' && prev != ' ' && prev != '\t')
+        {
+            i = f + name.size();
+            continue;
         }
 
-        if (afterBrace < text.size() && text[afterBrace] == ',')
-            structEnd = afterBrace + 1;
+        size_t e = f + name.size();
+        while(e < end && (text[e] == ' ' || text[e] == '\t'))
+            ++e;
+        if(e >= end || text[e] != '=')
+        {
+            i = f + name.size();
+            continue;
+        }
+        ++e;
+        while(e < end && (text[e] == ' ' || text[e] == '\t'))
+            ++e;
+        if(e >= end)
+            return false;
 
-        if (structEnd < text.size() && text[structEnd] == '\n')
-            structEnd += 1;
+        size_t fieldEnd;
+        if(text[e] == '{')
+        {
+            int bc = 1;
+            size_t b = e + 1;
+            for(; b < end && bc > 0; ++b)
+            {
+                if(text[b] == '{')
+                    ++bc;
+                else if(text[b] == '}')
+                    --bc;
+            }
+            if(bc != 0)
+                return false;
+            fieldEnd = b;
+        }
+        else
+        {
+            size_t b = e;
+            while(b < end && text[b] != ',' && text[b] != '\n')
+                ++b;
+            fieldEnd = (b < end && text[b] == ',') ? b + 1 : b;
+        }
+        if(fieldEnd < end && text[fieldEnd] == ',')
+            ++fieldEnd;
+        while(fieldEnd < end && (text[fieldEnd] == ' ' || text[fieldEnd] == '\t'))
+            ++fieldEnd;
+        if(fieldEnd < end && text[fieldEnd] == '\n')
+            ++fieldEnd;
 
+        size_t lineStart = f;
+        while(lineStart > start && text[lineStart - 1] != '\n')
+            --lineStart;
+        if(lineStart == start)
+            lineStart = f;
 
-        // 删除整个结构
-        size_t length = structEnd - deleteStart;
-        text.erase(deleteStart, length);
-
-        // 更新结束位置
-        end -= length;
-
+        text.erase(lineStart, fieldEnd - lineStart);
         return true;
     }
-
     return false;
 }
 
