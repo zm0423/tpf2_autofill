@@ -505,8 +505,7 @@ and import.</translation>
     <message>
         <location filename="ui/mainui.ui" line="369"/>
         <source>全部清空后导入</source>
-        <translation>Clear all 
-and import.</translation>
+        <translation>Clear all and import</translation>
     </message>
     <message>
         <location filename="ui/mainui.ui" line="382"/>
@@ -744,11 +743,11 @@ Press Cancel to return.</translation>
     </message>
     <message>
         <source>时刻表&amp;运行图、时刻表1.2</source>
-        <translation type="unfinished">时刻表&amp;运行图、时刻表1.2</translation>
+        <translation>Timetable &amp; Train Diagram, Timetable 1.2</translation>
     </message>
     <message>
         <source>时刻表1.3-1.5</source>
-        <translation type="unfinished">时刻表1.3-1.5</translation>
+        <translation>Timetable 1.3-1.5</translation>
     </message>
 </context>
 </TS>

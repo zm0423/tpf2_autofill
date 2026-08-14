@@ -44,18 +44,15 @@ bool MarkdownLanguageManager::loadQtTranslations(Language lang)
     QCoreApplication::removeTranslator(&m_appTranslator);
     QCoreApplication::removeTranslator(&m_qtTranslator);
 
-    // 中文为源语言，无需加载应用翻译
-    if (lang != Chinese)
+    // 加载应用翻译
+    QString appTransFile = QString(":/translations/tpf2_autofill_%1.qm").arg(langCode);
+    if (m_appTranslator.load(appTransFile))
     {
-        QString appTransFile = QString(":/translations/tpf2_autofill_%1.qm").arg(langCode);
-        if (m_appTranslator.load(appTransFile))
-        {
-            QCoreApplication::installTranslator(&m_appTranslator);
-        }
-        else
-        {
-            qWarning() << "Cannot load translation file:" << appTransFile;
-        }
+        QCoreApplication::installTranslator(&m_appTranslator);
+    }
+    else
+    {
+        qWarning() << "Cannot load translation file:" << appTransFile;
     }
 
     // 加载Qt库翻译（可选）
