@@ -9,8 +9,6 @@
         <file>docs/mainui_en_US.md</file>
         <file>docs/data_add_zh_CN.md</file>
         <file>docs/data_add_en_US.md</file>
-    </qresource>
-    <qresource prefix="/translations">
         <file>translations/tpf2_autofill_en_US.qm</file>
         <file>translations/tpf2_autofill_zh_CN.qm</file>
     </qresource>
