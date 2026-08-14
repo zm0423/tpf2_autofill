@@ -165,9 +165,9 @@
               <pointsize>9</pointsize>
              </font>
             </property>
-            <property name="text">
-             <string>csv模式不支持多表单</string>
-            </property>
+             <property name="text">
+              <string>（csv模式不支持多表单）</string>
+             </property>
            </widget>
           </item>
           <item>
@@ -182,6 +182,36 @@
              </size>
             </property>
            </spacer>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
+        <widget class="QGroupBox" name="group_mode">
+         <property name="title">
+          <string>导入方式</string>
+         </property>
+         <layout class="QVBoxLayout" name="vbox_mode">
+          <item>
+           <widget class="QRadioButton" name="clear_1">
+            <property name="text">
+             <string>仅覆盖</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QRadioButton" name="clear_2">
+            <property name="text">
+             <string>按线路表清空后导入</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QRadioButton" name="clear_3">
+            <property name="text">
+             <string>全部清空后导入</string>
+            </property>
+           </widget>
           </item>
          </layout>
         </widget>
@@ -238,36 +268,6 @@
      <item>
       <layout class="QVBoxLayout" name="rightCol">
        <item>
-        <widget class="QGroupBox" name="group_mode">
-         <property name="title">
-          <string>导入方式</string>
-         </property>
-         <layout class="QVBoxLayout" name="vbox_mode">
-          <item>
-           <widget class="QRadioButton" name="clear_1">
-            <property name="text">
-             <string>仅覆盖</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QRadioButton" name="clear_2">
-            <property name="text">
-             <string>清空line文件后导入</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QRadioButton" name="clear_3">
-            <property name="text">
-             <string>全部清空后导入</string>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </widget>
-       </item>
-       <item>
         <widget class="QPushButton" name="input_data">
          <property name="minimumSize">
           <size>
@@ -279,6 +279,42 @@
           <string>站点、线路数据录入</string>
          </property>
         </widget>
+       </item>
+       <item>
+        <spacer name="spacer_buttons1">
+         <property name="orientation">
+          <enum>Qt::Orientation::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>20</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+       <item>
+        <widget class="QFrame" name="line_sep">
+         <property name="frameShape">
+          <enum>QFrame::Shape::HLine</enum>
+         </property>
+         <property name="frameShadow">
+          <enum>QFrame::Shadow::Sunken</enum>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <spacer name="spacer_buttons2">
+         <property name="orientation">
+          <enum>Qt::Orientation::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>20</height>
+          </size>
+         </property>
+        </spacer>
        </item>
        <item>
         <widget class="QPushButton" name="sync_all_data">
