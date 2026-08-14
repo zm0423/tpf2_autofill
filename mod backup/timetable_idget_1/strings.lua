@@ -1,11 +1,11 @@
 ﻿function data()
 return {
   en = {
-    ["name"] = "Timetable autofill program assist tool",
+    ["name"] = "Timetable AutoFill Program Assist Tool",
     ["desc_main"] = [[
-    An assist tool for timetable autofill program. 
+    An assist tool for the Timetable AutoFill program. 
     Please use it with the program.
-    Autofill Program version need >= 1.2
+    AutoFill Program version need >= 1.2
     Compatible with timetable mod 1.1-1.5
 
     Program website:https://github.com/zm0423/tpf2_autofill

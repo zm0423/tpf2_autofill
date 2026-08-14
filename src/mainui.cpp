@@ -15,6 +15,7 @@
 #include <QProgressDialog>
 #include <QTextEdit>
 #include <QScreen>
+#include <QFontMetrics>
 
 
 #include "xlsxdocument.h"
@@ -386,8 +387,8 @@ void mainui::read_station_line()
 
 void mainui::refresh()
 {
-    auto setPathText = [](QLineEdit *l, const QString &full) {
-        l->setText(full);
+    auto setPathText = [this](QLabel *l, const QString &full) {
+        l->setText(QFontMetrics(l->font()).elidedText(full, Qt::ElideMiddle, l->maximumWidth()));
         l->setToolTip(full);
     };
     setPathText(ui->dir_name, sdata.folder_name.empty()? tr("无") : QString::fromStdString(sdata.folder_name));

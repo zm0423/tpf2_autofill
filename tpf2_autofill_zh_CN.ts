@@ -823,8 +823,8 @@ mod可在创意工坊内找到（Github上也有备份）</translation>
         <translation>路径</translation>
     </message>
     <message>
-        <source>数据来源</source>
-        <translation>数据来源</translation>
+        <source>数据读取方式</source>
+        <translation>数据读取方式</translation>
     </message>
     <message>
         <source>文件格式</source>

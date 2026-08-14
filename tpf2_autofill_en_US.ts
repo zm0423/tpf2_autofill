@@ -222,14 +222,14 @@ console command:</translation>
     <message>
         <location filename="ui/data_add.ui" line="119"/>
         <source>自定义截断字符</source>
-        <translation>Custom truncation</translation>
+        <translation>Truncation Char…</translation>
     </message>
     <message>
         <location filename="ui/data_add.ui" line="144"/>
         <source>请安装“时刻表自动录入程序辅助工具”mod
 将它应用至存档内并保存至存档。
 mod可在创意工坊内找到，或者在Github上下载</source>
-        <translation>Please install the &quot;Timetable autofill program assist tool&quot; mod.
+        <translation>Please install the &quot;Timetable AutoFill Program Assist Tool&quot; mod.
 Apply it to your save file and save the changes.
 The mod can be found on the Steam Workshop.
 (Github also has backup)</translation>
@@ -395,7 +395,8 @@ Please enter a character within the range 0-127.</translation>
     <message>
         <location filename="ui/mainui.ui" line="31"/>
         <source>站点、线路数据录入</source>
-        <translation>Import Station and Line Data</translation>
+        <translation>Import Station and
+Line Data</translation>
     </message>
     <message>
         <location filename="ui/mainui.ui" line="44"/>
@@ -504,7 +505,7 @@ and import.</translation>
     <message>
         <location filename="ui/mainui.ui" line="369"/>
         <source>全部清空后导入</source>
-        <translation>Clear all and import</translation>
+        <translation>Clear All and Import</translation>
     </message>
     <message>
         <location filename="ui/mainui.ui" line="382"/>
@@ -675,7 +676,7 @@ Format details can be found in the documentation. Each row represents one line. 
         <location filename="src/mainui.cpp" line="979"/>
         <source>当前为列表清空，即仅清空_line文件内包含的列表
 </source>
-        <translation>Currently in &quot;Clear List&quot; mode. Only clearing the list contained in the `_line` file.
+        <translation>Currently in &quot;Clear Line&quot; mode. Only clearing the lines listed in the `_line` file.
 </translation>
     </message>
     <message>
@@ -709,8 +710,8 @@ Press Cancel to return.</translation>
         <translation>Path</translation>
     </message>
     <message>
-        <source>数据来源</source>
-        <translation>Data Source</translation>
+        <source>数据读取方式</source>
+        <translation>Data Reading Mode</translation>
     </message>
     <message>
         <source>文件格式</source>

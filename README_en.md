@@ -29,7 +29,7 @@ Go to the [Releases](https://github.com/zm0423/tpf2_autofill/releases) page, dow
     >   **Tip**: You can also locate it in-game via **Settings → Advanced → Open User Data Folder**.
 
 3. **Download and activate assist mod**
-   - Download "**Timetable autofill program assist tool**" mod in the workshop.
+   - Download "**Timetable AutoFill Program Assist Tool**" mod in the workshop.
    - Activate it in your save game and save it.
 
 
