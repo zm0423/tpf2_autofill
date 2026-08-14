@@ -214,6 +214,7 @@ void mainui::init()
 
     ui->version_combo->setCurrentIndex(sdata.d_version);
 
+    refresh();
 
     if(!get_folder())
         return;
