@@ -180,14 +180,16 @@ Cannot load document.</translation>
         <source>车站数据
 导入</source>
         <oldsource>游戏内获取的数据输入区域：</oldsource>
-        <translation>Import Station Data</translation>
+        <translation>Import Station
+Data</translation>
     </message>
     <message>
         <location filename="ui/data_add.ui" line="81"/>
         <source>线路数据
 导入</source>
         <oldsource>车站数据代码：</oldsource>
-        <translation>Import Line Data</translation>
+        <translation>Import Line
+Data</translation>
     </message>
     <message>
         <source>复制</source>
@@ -227,9 +229,9 @@ console command:</translation>
         <source>请安装“时刻表自动录入程序辅助工具”mod
 将它应用至存档内并保存至存档。
 mod可在创意工坊内找到，GitHub上也有备份</source>
-        <translation>Please install the &quot;Timetable AutoFill Program Assist Tool&quot; mod.
-Apply it to your save file and save the changes.
-The mod can be found on the Steam Workshop. A backup is also available on GitHub.</translation>
+        <translation>Please install the &quot;Timetable AutoFill Program
+Assist Tool&quot; mod, apply it to your save and save it.
+Find it on the Steam Workshop (GitHub also has a backup).</translation>
     </message>
     <message>
         <location filename="ui/data_add.ui" line="65"/>
