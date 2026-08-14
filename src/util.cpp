@@ -367,15 +367,17 @@ bool write_to_lua(const std::filesystem::path& filename,
         remove_field(text, bodyStart, bodyEnd, "hasTimetable");
         bodyEnd = find_entry_end(text, bodyStart);
         remove_field(text, bodyStart, bodyEnd, "frequency");
+        bodyEnd = find_entry_end(text, bodyStart);
 
         auto innerIt = innerBlocks.find(it->lid);
         if(innerIt != innerBlocks.end())
         {
             std::string inner = innerIt->second;
-            size_t at = bodyStart;
-            if(at < text.size() && text[at] == '\n')
-                ++at;
-            else
+            // 插到条目末尾（'}' 前一行行首），使受管字段沉底、其余字段在上
+            size_t at = bodyEnd;
+            while(at > bodyStart && text[at - 1] != '\n')
+                --at;
+            if(at == bodyStart)
                 inner = "\n" + inner;
             text.insert(at, inner);
         }
