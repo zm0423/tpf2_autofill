@@ -16,7 +16,7 @@ Cannot load document.</translation>
     <message>
         <location filename="src/mainui.cpp" line="1098"/>
         <source>作者：今天学高代了吗&lt;br/&gt;b站视频教程：&lt;a href=&quot;https://www.bilibili.com/video/BV1yj2ABwE9v/?spm_id_from=333.1387.homepage.video_card.click&amp;vd_source=3fd42c24215ba0da48b95a40864f298c&quot;&gt;https://www.bilibili.com/video/BV1yj2ABwE9v&lt;/a&gt; &lt;br/&gt;github：&lt;a href=&quot;https://github.com/zm0423/tpf2_autofill&quot;&gt; https://github.com/zm0423/tpf2_autofill&lt;/a&gt; &lt;br/&gt;邮箱：15800733391@163.com &lt;br/&gt;2025.12.14</source>
-        <translation type="unfinished">Author：zm0423&lt;br/&gt;github：&lt;a href=&quot;https://github.com/zm0423/tpf2_autofill&quot;&gt; https://github.com/zm0423/tpf2_autofill&lt;/a&gt; &lt;br/&gt;email：15800733391@163.com &lt;br/&gt;YouTube：&lt;a href=&quot;https://youtu.be/DP7g3r3tlh0&quot;&gt; https://youtu.be/DP7g3r3tlh0&lt;/a&gt; &lt;br/&gt; bilibili：&lt;a href=&quot;https://www.bilibili.com/video/BV1F8qsB8Ezg&quot;&gt;https://www.bilibili.com/video/BV1F8qsB8Ezg&lt;/a&gt; &lt;br/&gt;2025.12.14</translation>
+        <translation>Author：zm0423&lt;br/&gt;github：&lt;a href=&quot;https://github.com/zm0423/tpf2_autofill&quot;&gt; https://github.com/zm0423/tpf2_autofill&lt;/a&gt; &lt;br/&gt;email：15800733391@163.com &lt;br/&gt;YouTube：&lt;a href=&quot;https://youtu.be/DP7g3r3tlh0&quot;&gt; https://youtu.be/DP7g3r3tlh0&lt;/a&gt; &lt;br/&gt; bilibili：&lt;a href=&quot;https://www.bilibili.com/video/BV1F8qsB8Ezg&quot;&gt;https://www.bilibili.com/video/BV1F8qsB8Ezg&lt;/a&gt; &lt;br/&gt;2025.12.14</translation>
     </message>
     <message>
         <location filename="src/util.cpp" line="69"/>
@@ -165,7 +165,7 @@ Cannot load document.</translation>
     <message>
         <location filename="src/util.cpp" line="824"/>
         <source>其他</source>
-        <translation>other</translation>
+        <translation>Other</translation>
     </message>
 </context>
 <context>
@@ -180,16 +180,14 @@ Cannot load document.</translation>
         <source>车站数据
 导入</source>
         <oldsource>游戏内获取的数据输入区域：</oldsource>
-        <translation>Station ID
-Import</translation>
+        <translation>Import Station Data</translation>
     </message>
     <message>
         <location filename="ui/data_add.ui" line="81"/>
         <source>线路数据
 导入</source>
         <oldsource>车站数据代码：</oldsource>
-        <translation>Line ID
-Import</translation>
+        <translation>Import Line Data</translation>
     </message>
     <message>
         <source>复制</source>
@@ -217,7 +215,7 @@ console command:</translation>
     <message>
         <location filename="ui/data_add.ui" line="112"/>
         <source>截断&quot;/&quot;以后内容</source>
-        <translation>Truncated after &quot;/&quot;.</translation>
+        <translation>Truncate after &quot;/&quot;</translation>
     </message>
     <message>
         <location filename="ui/data_add.ui" line="119"/>
@@ -228,11 +226,10 @@ console command:</translation>
         <location filename="ui/data_add.ui" line="144"/>
         <source>请安装“时刻表自动录入程序辅助工具”mod
 将它应用至存档内并保存至存档。
-mod可在创意工坊内找到，或者在Github上下载</source>
+mod可在创意工坊内找到，GitHub上也有备份</source>
         <translation>Please install the &quot;Timetable AutoFill Program Assist Tool&quot; mod.
 Apply it to your save file and save the changes.
-The mod can be found on the Steam Workshop.
-(Github also has backup)</translation>
+The mod can be found on the Steam Workshop. A backup is also available on GitHub.</translation>
     </message>
     <message>
         <location filename="ui/data_add.ui" line="65"/>
@@ -244,7 +241,7 @@ The mod can be found on the Steam Workshop.
         <location filename="src/data_add.cpp" line="33"/>
         <location filename="src/data_add.cpp" line="300"/>
         <source>截断&quot;%1&quot;以后内容</source>
-        <translation>Truncated after &quot;%1&quot;.</translation>
+        <translation>Truncate after &quot;%1&quot;</translation>
     </message>
     <message>
         <location filename="src/data_add.cpp" line="34"/>
@@ -254,12 +251,12 @@ The mod can be found on the Steam Workshop.
     <message>
         <location filename="src/data_add.cpp" line="88"/>
         <source>未找到存档内站点数据，请检查辅助mod是否安装</source>
-        <translation>No station ID found in the save file. Please check if the required assist mod is installed.</translation>
+        <translation>No station ID data found in the save file. Please check if the required assist mod is installed.</translation>
     </message>
     <message>
         <location filename="src/data_add.cpp" line="98"/>
         <source>读取的数据如下</source>
-        <translation>The read ID data is as follows:</translation>
+        <translation>The imported data is as follows:</translation>
     </message>
     <message>
         <location filename="src/data_add.cpp" line="100"/>
@@ -302,7 +299,7 @@ The mod can be found on the Steam Workshop.
         <location filename="src/data_add.cpp" line="262"/>
         <location filename="src/data_add.cpp" line="291"/>
         <source>错误</source>
-        <translation>error</translation>
+        <translation>Error</translation>
     </message>
     <message>
         <source>数据过少</source>
@@ -311,22 +308,22 @@ The mod can be found on the Steam Workshop.
     <message>
         <location filename="src/data_add.cpp" line="137"/>
         <source>站点数据导入成功，若需更改请查看 存档名_station.xlsx</source>
-        <translation>Station ID imported successfully. To make changes, please check: SaveName_station.xlsx</translation>
+        <translation>Station ID data imported successfully. To make changes, please check: SaveName_station.xlsx</translation>
     </message>
     <message>
         <location filename="src/data_add.cpp" line="152"/>
         <source>未找到存档内线路数据，请检查辅助mod是否安装</source>
-        <translation>No line ID found in the save file. Please check if the required assist mod is installed.</translation>
+        <translation>No line ID data found in the save file. Please check if the required assist mod is installed.</translation>
     </message>
     <message>
         <location filename="src/data_add.cpp" line="178"/>
         <source>读取的（截断后）数据如下</source>
-        <translation>The read data (truncated) is as follows:</translation>
+        <translation>The imported data (after truncation) is as follows:</translation>
     </message>
     <message>
         <location filename="src/data_add.cpp" line="210"/>
         <source>线路数据导入成功，若需更改请查看 存档名_line.xlsx</source>
-        <translation>Line ID imported successfully. To make changes, please check: SaveName_line.xlsx</translation>
+        <translation>Line ID data imported successfully. To make changes, please check: SaveName_line.xlsx</translation>
     </message>
     <message>
         <location filename="src/data_add.cpp" line="228"/>
@@ -406,7 +403,7 @@ Line Data</translation>
     <message>
         <location filename="ui/mainui.ui" line="60"/>
         <source>存在站点数据：</source>
-        <translation>Station ID Present:</translation>
+        <translation>Station IDs Loaded:</translation>
     </message>
     <message>
         <location filename="ui/mainui.ui" line="67"/>
@@ -419,17 +416,17 @@ Line Data</translation>
     <message>
         <location filename="ui/mainui.ui" line="74"/>
         <source>存在线路数据：</source>
-        <translation>Line ID Present:</translation>
+        <translation>Line IDs Loaded:</translation>
     </message>
     <message>
         <location filename="ui/mainui.ui" line="110"/>
         <source>根目录文件夹：</source>
-        <translation>Working Dir:</translation>
+        <translation>Working Directory:</translation>
     </message>
     <message>
         <location filename="ui/mainui.ui" line="140"/>
         <source>更改根目录</source>
-        <translation>Change dir</translation>
+        <translation>Change Directory</translation>
     </message>
     <message>
         <location filename="ui/mainui.ui" line="164"/>
@@ -544,7 +541,7 @@ and import.</translation>
         <location filename="src/mainui.cpp" line="170"/>
         <location filename="src/mainui.cpp" line="325"/>
         <source>文件1</source>
-        <translation>File1</translation>
+        <translation>File 1</translation>
     </message>
     <message>
         <location filename="src/mainui.cpp" line="171"/>
@@ -552,19 +549,19 @@ and import.</translation>
         <location filename="src/mainui.cpp" line="326"/>
         <location filename="src/mainui.cpp" line="328"/>
         <source>表单名称</source>
-        <translation>Sheets</translation>
+        <translation>Sheet Name</translation>
     </message>
     <message>
         <location filename="src/mainui.cpp" line="172"/>
         <location filename="src/mainui.cpp" line="327"/>
         <source>文件2</source>
-        <translation>File2</translation>
+        <translation>File 2</translation>
     </message>
     <message>
         <location filename="src/mainui.cpp" line="178"/>
         <location filename="src/mainui.cpp" line="333"/>
         <source>未检测到列表文件，已自动生成</source>
-        <translation>No list file detected.Automatically generate</translation>
+        <translation>No list file detected. One has been generated automatically.</translation>
     </message>
     <message>
         <location filename="src/mainui.cpp" line="179"/>
@@ -607,7 +604,7 @@ Format details can be found in the documentation. Each row represents one line. 
     <message>
         <location filename="src/mainui.cpp" line="296"/>
         <source>选择存档lua文件</source>
-        <translation>Select Save Lua File</translation>
+        <translation>Select Save File (.lua)</translation>
     </message>
     <message>
         <location filename="src/mainui.cpp" line="296"/>
@@ -669,7 +666,7 @@ Format details can be found in the documentation. Each row represents one line. 
         <location filename="src/mainui.cpp" line="976"/>
         <source>当前为覆盖模式，即仅添加或更新现有时刻表
 </source>
-        <translation>Currently in &quot;Overwrite Only&quot; mode. Only adding or updating existing timetables.
+        <translation>Currently in &quot;Overwrite Only&quot; mode. Only adds or updates existing timetables.
 </translation>
     </message>
     <message>
@@ -698,7 +695,7 @@ Press Cancel to return.</translation>
     <message>
         <location filename="src/mainui.cpp" line="991"/>
         <source>请核对时刻表数量以及表单，按确认继续</source>
-        <translation>Please verify the number of timetables and the sheet, then press OK to continue.</translation>
+        <translation>Please verify the number of timetables and the sheets, then press OK to continue.</translation>
     </message>
     <message>
         <location filename="src/mainui.cpp" line="1113"/>
@@ -723,7 +720,7 @@ Press Cancel to return.</translation>
     </message>
     <message>
         <source>兼容版本</source>
-        <translation>Compat Version</translation>
+        <translation>Compatibility Version</translation>
     </message>
     <message>
         <source>（csv模式不支持多表单）</source>

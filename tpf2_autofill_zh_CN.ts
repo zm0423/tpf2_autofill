@@ -349,10 +349,10 @@ xlsx，csv：顾名思义。csv仅支持UTF8格式，请在另存为界面寻找
         <location filename="ui/data_add.ui" line="144"/>
         <source>请安装“时刻表自动录入程序辅助工具”mod
 将它应用至存档内并保存至存档。
-mod可在创意工坊内找到，或者在Github上下载</source>
+mod可在创意工坊内找到，GitHub上也有备份</source>
         <translation>请安装“时刻表自动录入程序辅助工具”mod
 将它应用至存档内并保存至存档。
-mod可在创意工坊内找到（Github上也有备份）</translation>
+mod可在创意工坊内找到，GitHub上也有备份</translation>
     </message>
     <message>
         <location filename="ui/data_add.ui" line="65"/>
