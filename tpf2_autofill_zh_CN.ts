@@ -862,5 +862,17 @@ mod可在创意工坊内找到（Github上也有备份）</translation>
         <source>时刻表1.3-1.5</source>
         <translation>时刻表1.3-1.5</translation>
     </message>
+    <message>
+        <source>警告</source>
+        <translation>警告</translation>
+    </message>
+    <message>
+        <source>该操作会清空 %1_line.xlsx 里的线路对应到存档内的时刻表数据，是否确认？</source>
+        <translation>该操作会清空 %1_line.xlsx 里的线路对应到存档内的时刻表数据，是否确认？</translation>
+    </message>
+    <message>
+        <source>下次不再提示</source>
+        <translation>下次不再提示</translation>
+    </message>
 </context>
 </TS>

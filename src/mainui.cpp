@@ -87,6 +87,12 @@ mainui::mainui(QWidget *parent)
                          refresh_file(sdata);
                      });
 
+    QObject::connect(ui->version_combo, QOverload<int>::of(&QComboBox::currentIndexChanged),
+                     this, [&](int p) {
+                         sdata.d_version = p;
+                         refresh_file(sdata);
+                     });
+
     QTimer::singleShot(0, this, &mainui::init);
 }
 
@@ -139,6 +145,12 @@ void mainui::init()
         if(getline(sys_file,buf,'\n'))
             sdata.d_line_add = std::stoi(buf);
 
+        if(getline(sys_file,buf,'\n'))
+            sdata.d_clear2_warning = std::stoi(buf);
+
+        if(getline(sys_file,buf,'\n'))
+            sdata.d_version = std::stoi(buf);
+
         read_station_line();
 
         sys_file.close();
@@ -155,6 +167,8 @@ void mainui::init()
         ui->clear_3->setChecked(sdata.clear_if == 3 ? 1 : 0);
 
         ui->pile_if->setChecked(sdata.pile_if);
+
+        ui->version_combo->setCurrentIndex(sdata.d_version);
 
         refresh();
         if(!fs::exists(sdata.folder_dir / fs::u8path(sdata.sg_name + "_list.xlsx")))
@@ -197,6 +211,8 @@ void mainui::init()
     ui->clear_3->setChecked(sdata.clear_if == 3 ? 1 : 0);
 
     ui->pile_if->setChecked(sdata.pile_if);
+
+    ui->version_combo->setCurrentIndex(sdata.d_version);
 
 
     if(!get_folder())
@@ -259,7 +275,7 @@ void mainui::on_sync_all_data_clicked()
         for(auto &[lineid, stationdata]:data)
             all_data += get_filetext(lineid, stationdata);
 
-        write_to_lua(sdata.sg_dir, all_data, lists, sdata.line, sdata.clear_if);
+        write_to_lua(sdata.sg_dir, all_data, lists, sdata.line, sdata.clear_if, sdata.d_version == 0);
     }
     catch (const std::filesystem::filesystem_error &e)
     {
@@ -1015,6 +1031,25 @@ bool mainui::get_data(std::vector<std::pair<int, std::vector<std::pair<QString, 
     if(!printq(prefix, content, suffix))
         return 0;
 
+    if(sdata.clear_if == 2 && sdata.d_clear2_warning)
+    {
+        QMessageBox msgBox;
+        msgBox.setWindowTitle(tr("警告"));
+        msgBox.setIcon(QMessageBox::Warning);
+        msgBox.setText(tr("该操作会清空 %1_line.xlsx 里的线路对应到存档内的时刻表数据，是否确认？")
+                           .arg(QString::fromStdString(sdata.sg_name)));
+        msgBox.setStandardButtons(QMessageBox::Ok | QMessageBox::Cancel);
+        msgBox.setDefaultButton(QMessageBox::Cancel);
+        QCheckBox *dontShow = new QCheckBox(tr("下次不再提示"), &msgBox);
+        msgBox.setCheckBox(dontShow);
+        if(msgBox.exec() != QMessageBox::Ok)
+            return 0;
+        if(dontShow->isChecked())
+        {
+            sdata.d_clear2_warning = false;
+            refresh_file(sdata);
+        }
+    }
 
 
     return 1;

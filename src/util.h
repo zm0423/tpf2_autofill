@@ -43,6 +43,8 @@ struct my_data
 
     bool d_station_add{};
     bool d_line_add{};
+    bool d_clear2_warning{true};
+    int d_version{};   // 0=字符串键 1=数字键
 };
 
 const std::filesystem::path sys_file_name{"tpf2_autofill.dat"};
@@ -162,7 +164,8 @@ bool write_to_lua(const std::filesystem::path& filename,
                   const std::string& data,
                   const std::vector<std::pair<int, std::vector<std::pair<QString, QString>>>>& id,
                   const std::vector<std::pair<std::string, int>> & line,
-                  int clear_if);
+                  int clear_if,
+                  bool quotedKeys);
 
 struct CSVData {
     std::string col2;

@@ -202,7 +202,8 @@ bool write_to_lua(const std::filesystem::path& filename,
                   const std::string &data,
                   const std::vector<std::pair<int, std::vector<std::pair<QString, QString>>>>& id,
                   const std::vector<std::pair<std::string, int>> & line,
-                  int clear_if)
+                  int clear_if,
+                  bool quotedKeys)
 {
     std::ifstream infile(filename, std::ios::binary);
 
@@ -315,14 +316,6 @@ bool write_to_lua(const std::filesystem::path& filename,
         return false;
     }
     --blockEnd; // 指向 '}'
-
-    // 探测存档使用的键格式：新版为字符串键 ["id"]，旧版为数字键 [id]
-    bool quotedKeys = false;
-    {
-        size_t q = text.find("[\"", blockStart);
-        if(q != std::string::npos && q < blockEnd)
-            quotedKeys = true;
-    }
 
     // 扫描块内所有线路条目（只读）
     struct Entry { size_t bodyStart; size_t bodyEnd; int lid; };
@@ -957,6 +950,8 @@ void refresh_file(const my_data &sdata)
     file << sdata.pile_if << '\n';
     file << sdata.d_station_add << '\n';
     file << sdata.d_line_add << '\n';
+    file << sdata.d_clear2_warning << '\n';
+    file << sdata.d_version << '\n';
 
     file.close();
 }

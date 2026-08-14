@@ -749,5 +749,17 @@ Press Cancel to return.</translation>
         <source>时刻表1.3-1.5</source>
         <translation>Timetable 1.3-1.5</translation>
     </message>
+    <message>
+        <source>警告</source>
+        <translation>Warning</translation>
+    </message>
+    <message>
+        <source>该操作会清空 %1_line.xlsx 里的线路对应到存档内的时刻表数据，是否确认？</source>
+        <translation>This will clear the timetable data in the save file for all lines listed in %1_line.xlsx. Continue?</translation>
+    </message>
+    <message>
+        <source>下次不再提示</source>
+        <translation>Don&apos;t show again</translation>
+    </message>
 </context>
 </TS>
