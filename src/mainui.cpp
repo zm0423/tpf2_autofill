@@ -374,6 +374,12 @@ void mainui::refresh()
     ui->savegame_name->setText(sdata.sg_name.empty()? tr("无") : QString::fromStdString(sdata.sg_name));
     ui->station_status->setText(sdata.station.empty()? tr("否"):tr("是"));
     ui->line_status->setText(sdata.line.empty()? tr("否"):tr("是"));
+    ui->station_status->setStyleSheet(sdata.station.empty()?
+        QStringLiteral("color: #c62828; font-weight: bold;") :
+        QStringLiteral("color: #2e7d32; font-weight: bold;"));
+    ui->line_status->setStyleSheet(sdata.line.empty()?
+        QStringLiteral("color: #c62828; font-weight: bold;") :
+        QStringLiteral("color: #2e7d32; font-weight: bold;"));
 }
 
 

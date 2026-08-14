@@ -60,6 +60,9 @@
             <property name="textInteractionFlags">
              <set>Qt::TextInteractionFlag::TextSelectableByMouse</set>
             </property>
+            <property name="styleSheet">
+             <string notr="true">background-color: rgba(0, 0, 0, 20); border: 1px solid rgba(0, 0, 0, 40); border-radius: 3px; padding: 2px 6px;</string>
+            </property>
            </widget>
           </item>
           <item row="0" column="2">
@@ -89,6 +92,9 @@
             </property>
             <property name="textInteractionFlags">
              <set>Qt::TextInteractionFlag::TextSelectableByMouse</set>
+            </property>
+            <property name="styleSheet">
+             <string notr="true">background-color: rgba(0, 0, 0, 20); border: 1px solid rgba(0, 0, 0, 40); border-radius: 3px; padding: 2px 6px;</string>
             </property>
            </widget>
           </item>
@@ -232,11 +238,6 @@
             </property>
             <item>
              <property name="text">
-              <string>自动检测</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
               <string>时刻表&amp;运行图、时刻表1.2</string>
              </property>
             </item>
@@ -267,6 +268,19 @@
      </item>
      <item>
       <layout class="QVBoxLayout" name="rightCol">
+       <item>
+        <spacer name="rightTopStretch">
+         <property name="orientation">
+          <enum>Qt::Orientation::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>40</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
        <item>
         <widget class="QPushButton" name="input_data">
          <property name="minimumSize">
