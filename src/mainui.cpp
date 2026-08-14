@@ -15,6 +15,7 @@
 #include <QProgressDialog>
 #include <QTextEdit>
 #include <QScreen>
+#include <QFontMetrics>
 
 
 #include "xlsxdocument.h"
@@ -370,8 +371,12 @@ void mainui::read_station_line()
 
 void mainui::refresh()
 {
-    ui->dir_name->setText(sdata.folder_name.empty()? tr("无") : QString::fromStdString(sdata.folder_name));
-    ui->savegame_name->setText(sdata.sg_name.empty()? tr("无") : QString::fromStdString(sdata.sg_name));
+    auto setPathText = [this](QLabel *l, const QString &full) {
+        l->setText(QFontMetrics(l->font()).elidedText(full, Qt::ElideMiddle, l->maximumWidth()));
+        l->setToolTip(full);
+    };
+    setPathText(ui->dir_name, sdata.folder_name.empty()? tr("无") : QString::fromStdString(sdata.folder_name));
+    setPathText(ui->savegame_name, sdata.sg_name.empty()? tr("无") : QString::fromStdString(sdata.sg_name));
     ui->station_status->setText(sdata.station.empty()? tr("否"):tr("是"));
     ui->line_status->setText(sdata.line.empty()? tr("否"):tr("是"));
     ui->station_status->setStyleSheet(sdata.station.empty()?

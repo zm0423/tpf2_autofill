@@ -818,5 +818,49 @@ mod可在创意工坊内找到（Github上也有备份）</translation>
         <source>确定</source>
         <translation>确定</translation>
     </message>
+    <message>
+        <source>路径</source>
+        <translation>路径</translation>
+    </message>
+    <message>
+        <source>数据来源</source>
+        <translation>数据来源</translation>
+    </message>
+    <message>
+        <source>文件格式</source>
+        <translation>文件格式</translation>
+    </message>
+    <message>
+        <source>导入方式</source>
+        <translation>导入方式</translation>
+    </message>
+    <message>
+        <source>兼容版本</source>
+        <translation>兼容版本</translation>
+    </message>
+    <message>
+        <source>（csv模式不支持多表单）</source>
+        <translation>（csv模式不支持多表单）</translation>
+    </message>
+    <message>
+        <source>按线路表清空后导入</source>
+        <translation>按线路表清空后导入</translation>
+    </message>
+    <message>
+        <source>导入时刻表</source>
+        <translation>导入时刻表</translation>
+    </message>
+    <message>
+        <source>忽略最后一行数据</source>
+        <translation>忽略最后一行数据</translation>
+    </message>
+    <message>
+        <source>时刻表&amp;运行图、时刻表1.2</source>
+        <translation>时刻表&amp;运行图、时刻表1.2</translation>
+    </message>
+    <message>
+        <source>时刻表1.3-1.5</source>
+        <translation>时刻表1.3-1.5</translation>
+    </message>
 </context>
 </TS>

@@ -1,0 +1,19 @@
+<RCC>
+    <qresource prefix="/">
+        <file>web/github-markdown.css</file>
+        <file>web/highlight.min.js</file>
+        <file>web/markdown-it.min.js</file>
+        <file>web/languages/cpp.min.js</file>
+        <file>web/languages/markdown.min.js</file>
+        <file>docs/mainui_zh_CN.md</file>
+        <file>docs/mainui_en_US.md</file>
+        <file>docs/data_add_zh_CN.md</file>
+        <file>docs/data_add_en_US.md</file>
+    </qresource>
+    <qresource prefix="/translations">
+        <file>tpf2_autofill_en_US.qm</file>
+        <file>tpf2_autofill_zh_CN.qm</file>
+        <file>qt_en_US.qm</file>
+        <file>qt_zh_CN.qm</file>
+    </qresource>
+</RCC>

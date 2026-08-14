@@ -32,7 +32,6 @@ ui_*.h
 
 # Qt 临时文件
 *.qm
-*.qrc
 *.qmlc
 *.jsc
 

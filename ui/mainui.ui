@@ -63,6 +63,12 @@
             <property name="styleSheet">
              <string notr="true">background-color: rgba(0, 0, 0, 20); border: 1px solid rgba(0, 0, 0, 40); border-radius: 3px; padding: 2px 6px;</string>
             </property>
+            <property name="maximumSize">
+             <size>
+              <width>240</width>
+              <height>16777215</height>
+             </size>
+            </property>
            </widget>
           </item>
           <item row="0" column="2">
@@ -95,6 +101,12 @@
             </property>
             <property name="styleSheet">
              <string notr="true">background-color: rgba(0, 0, 0, 20); border: 1px solid rgba(0, 0, 0, 40); border-radius: 3px; padding: 2px 6px;</string>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>240</width>
+              <height>16777215</height>
+             </size>
             </property>
            </widget>
           </item>

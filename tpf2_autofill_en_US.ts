@@ -632,7 +632,7 @@ Format details can be found in the documentation. Each row represents one line. 
         <location filename="src/mainui.cpp" line="363"/>
         <location filename="src/mainui.cpp" line="364"/>
         <source>无</source>
-        <translation>NO</translation>
+        <translation>None</translation>
     </message>
     <message>
         <location filename="src/mainui.cpp" line="365"/>
@@ -705,6 +705,50 @@ Press Cancel to return.</translation>
         <location filename="src/mainui.cpp" line="1113"/>
         <source>确定</source>
         <translation>OK</translation>
+    </message>
+    <message>
+        <source>路径</source>
+        <translation>Path</translation>
+    </message>
+    <message>
+        <source>数据来源</source>
+        <translation>Data Source</translation>
+    </message>
+    <message>
+        <source>文件格式</source>
+        <translation>File Format</translation>
+    </message>
+    <message>
+        <source>导入方式</source>
+        <translation>Import Mode</translation>
+    </message>
+    <message>
+        <source>兼容版本</source>
+        <translation>Compat Version</translation>
+    </message>
+    <message>
+        <source>（csv模式不支持多表单）</source>
+        <translation>(No multi-sheet support)</translation>
+    </message>
+    <message>
+        <source>按线路表清空后导入</source>
+        <translation>Clear by Line Table then Import</translation>
+    </message>
+    <message>
+        <source>导入时刻表</source>
+        <translation>Import Timetable</translation>
+    </message>
+    <message>
+        <source>忽略最后一行数据</source>
+        <translation>Ignore Last Row</translation>
+    </message>
+    <message>
+        <source>时刻表&amp;运行图、时刻表1.2</source>
+        <translation type="unfinished">时刻表&amp;运行图、时刻表1.2</translation>
+    </message>
+    <message>
+        <source>时刻表1.3-1.5</source>
+        <translation type="unfinished">时刻表1.3-1.5</translation>
     </message>
 </context>
 </TS>
