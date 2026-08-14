@@ -173,7 +173,7 @@ Cannot load document.</translation>
     <message>
         <location filename="ui/data_add.ui" line="14"/>
         <source>Form</source>
-        <translation>Station and Line ID Entry</translation>
+        <translation>Station and Line Data Import</translation>
     </message>
     <message>
         <location filename="ui/data_add.ui" line="36"/>
@@ -249,7 +249,7 @@ The mod can be found on the Steam Workshop.
     <message>
         <location filename="src/data_add.cpp" line="34"/>
         <source>站点、线路数据导入</source>
-        <translation>Station and Line ID Import</translation>
+        <translation>Station and Line Data Import</translation>
     </message>
     <message>
         <location filename="src/data_add.cpp" line="88"/>
@@ -390,13 +390,12 @@ Please enter a character within the range 0-127.</translation>
     <message>
         <location filename="ui/mainui.ui" line="19"/>
         <source>mainui</source>
-        <translation>Transport Fever 2 Timetable Mod Auto-Fill</translation>
+        <translation>Transport Fever 2 Timetable Mod AutoFill</translation>
     </message>
     <message>
         <location filename="ui/mainui.ui" line="31"/>
         <source>站点、线路数据录入</source>
-        <translation>Station and Line
- ID Entry</translation>
+        <translation>Import Station and Line Data</translation>
     </message>
     <message>
         <location filename="ui/mainui.ui" line="44"/>
@@ -444,7 +443,7 @@ Please enter a character within the range 0-127.</translation>
     <message>
         <location filename="ui/mainui.ui" line="217"/>
         <source>狂热运输2 时刻表mod自动录入</source>
-        <translation>Transport Fever 2 Timetable Mod Auto-Fill</translation>
+        <translation>Transport Fever 2 Timetable Mod AutoFill</translation>
     </message>
     <message>
         <location filename="ui/mainui.ui" line="233"/>

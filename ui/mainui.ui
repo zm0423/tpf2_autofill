@@ -47,21 +47,18 @@
            </widget>
           </item>
           <item row="0" column="1">
-           <widget class="QLabel" name="dir_name">
+           <widget class="QLineEdit" name="dir_name">
             <property name="text">
              <string>无</string>
             </property>
+            <property name="readOnly">
+             <bool>true</bool>
+            </property>
             <property name="sizePolicy">
-             <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+             <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
               <horstretch>0</horstretch>
               <verstretch>0</verstretch>
              </sizepolicy>
-            </property>
-            <property name="textInteractionFlags">
-             <set>Qt::TextInteractionFlag::TextSelectableByMouse</set>
-            </property>
-            <property name="styleSheet">
-             <string notr="true">background-color: rgba(0, 0, 0, 20); border: 1px solid rgba(0, 0, 0, 40); border-radius: 3px; padding: 2px 6px;</string>
             </property>
             <property name="maximumSize">
              <size>
@@ -86,21 +83,18 @@
            </widget>
           </item>
           <item row="1" column="1">
-           <widget class="QLabel" name="savegame_name">
+           <widget class="QLineEdit" name="savegame_name">
             <property name="text">
              <string>无</string>
             </property>
+            <property name="readOnly">
+             <bool>true</bool>
+            </property>
             <property name="sizePolicy">
-             <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+             <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
               <horstretch>0</horstretch>
               <verstretch>0</verstretch>
              </sizepolicy>
-            </property>
-            <property name="textInteractionFlags">
-             <set>Qt::TextInteractionFlag::TextSelectableByMouse</set>
-            </property>
-            <property name="styleSheet">
-             <string notr="true">background-color: rgba(0, 0, 0, 20); border: 1px solid rgba(0, 0, 0, 40); border-radius: 3px; padding: 2px 6px;</string>
             </property>
             <property name="maximumSize">
              <size>
