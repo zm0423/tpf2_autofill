@@ -13,7 +13,5 @@
     <qresource prefix="/translations">
         <file>translations/tpf2_autofill_en_US.qm</file>
         <file>translations/tpf2_autofill_zh_CN.qm</file>
-        <file>translations/qt_en_US.qm</file>
-        <file>translations/qt_zh_CN.qm</file>
     </qresource>
 </RCC>
