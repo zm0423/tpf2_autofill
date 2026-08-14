@@ -514,6 +514,15 @@ bool mainui::get_list(std::vector<std::pair<int, std::vector<std::pair<QString, 
                     return false;
                 }
 
+                QString expectedSuffix = sdata.xls_if ? "xlsx" : "csv";
+                if(QFileInfo(filename).suffix().toLower() != expectedSuffix)
+                {
+                    display_info(tr("错误"),
+                                 tr("列表模式下，文件 %1 不是 %2 格式，请检查文件格式选项或修改列表文件")
+                                     .arg(filename).arg(expectedSuffix.toUpper()));
+                    return false;
+                }
+
                 if(!sdata.xls_if)
                 {
                     vec.push_back({filename, ""});

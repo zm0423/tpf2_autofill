@@ -874,5 +874,9 @@ mod可在创意工坊内找到，GitHub上也有备份</translation>
         <source>下次不再提示</source>
         <translation>下次不再提示</translation>
     </message>
+    <message>
+        <source>列表模式下，文件 %1 不是 %2 格式，请检查文件格式选项或修改列表文件</source>
+        <translation>列表模式下，文件 %1 不是 %2 格式，请检查文件格式选项或修改列表文件</translation>
+    </message>
 </context>
 </TS>

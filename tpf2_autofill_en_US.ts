@@ -760,5 +760,9 @@ Press Cancel to return.</translation>
         <source>下次不再提示</source>
         <translation>Don&apos;t show again</translation>
     </message>
+    <message>
+        <source>列表模式下，文件 %1 不是 %2 格式，请检查文件格式选项或修改列表文件</source>
+        <translation>In list mode, file %1 is not in %2 format. Please check the selected file format or fix the list file.</translation>
+    </message>
 </context>
 </TS>
