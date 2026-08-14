@@ -15,6 +15,7 @@
 #include <QProgressDialog>
 #include <QTextEdit>
 #include <QScreen>
+#include <QFontMetrics>
 
 
 #include "xlsxdocument.h"
@@ -54,7 +55,7 @@ mainui::mainui(QWidget *parent)
     m_clearGroup->addButton(ui->clear_1, 1);
     m_clearGroup->addButton(ui->clear_2, 2);
     m_clearGroup->addButton(ui->clear_3, 3);
-    setWindowTitle(tr("狂热运输2 时刻表自动输入") + tr(" V1.2"));
+    setWindowTitle(tr("狂热运输2 时刻表自动输入") + tr(" V1.3"));
 
     QObject::connect(m_easyGroup, &QButtonGroup::idClicked,
                      this, [&](int p) {
@@ -83,6 +84,12 @@ mainui::mainui(QWidget *parent)
     QObject::connect(ui->pile_if, &QCheckBox::toggled,
                      this, [&](bool p) {
                          sdata.pile_if = p;
+                         refresh_file(sdata);
+                     });
+
+    QObject::connect(ui->version_combo, QOverload<int>::of(&QComboBox::currentIndexChanged),
+                     this, [&](int p) {
+                         sdata.d_version = p;
                          refresh_file(sdata);
                      });
 
@@ -138,6 +145,12 @@ void mainui::init()
         if(getline(sys_file,buf,'\n'))
             sdata.d_line_add = std::stoi(buf);
 
+        if(getline(sys_file,buf,'\n'))
+            sdata.d_clear2_warning = std::stoi(buf);
+
+        if(getline(sys_file,buf,'\n'))
+            sdata.d_version = std::stoi(buf);
+
         read_station_line();
 
         sys_file.close();
@@ -155,8 +168,10 @@ void mainui::init()
 
         ui->pile_if->setChecked(sdata.pile_if);
 
+        ui->version_combo->setCurrentIndex(sdata.d_version);
+
         refresh();
-        if(!fs::exists(sdata.folder_dir / (sdata.sg_name + "_list.xlsx")))
+        if(!fs::exists(sdata.folder_dir / fs::u8path(sdata.sg_name + "_list.xlsx")))
         {
             QXlsx::Document doc;
             QXlsx::Format songTi20;
@@ -172,9 +187,9 @@ void mainui::init()
             doc.write(1, 5, tr("表单名称"));
             doc.write(1, 6, "...");
 
-            doc.saveAs(stq((sdata.folder_dir / (sdata.sg_name + "_list.xlsx")).u8string()));
+            doc.saveAs(stq((sdata.folder_dir / fs::u8path(sdata.sg_name + "_list.xlsx")).u8string()));
 
-            QString q = tr("未检测到列表文件，已自动生成") + stq((sdata.folder_dir / (sdata.sg_name + "_list.xlsx")).u8string());
+            QString q = tr("未检测到列表文件，已自动生成") + stq((sdata.folder_dir / fs::u8path(sdata.sg_name + "_list.xlsx")).u8string());
             q += tr("，如采用列表模式请编辑该文件\n格式见文档，每行一个线路，如有更多文件请向后加。"
                  "对于文件中的某些表单，请以空格分隔。"
                  "如果需要一个文件里的所有表单请空置“表单名称”栏目，第一行仅做说明，可随意更改。");
@@ -197,6 +212,9 @@ void mainui::init()
 
     ui->pile_if->setChecked(sdata.pile_if);
 
+    ui->version_combo->setCurrentIndex(sdata.d_version);
+
+    refresh();
 
     if(!get_folder())
         return;
@@ -242,21 +260,32 @@ void mainui::on_sync_all_data_clicked()
     refresh();
     std::vector<std::pair<int, std::vector<std::pair<QString, QString>>>> lists;
 
-    if(!get_list(lists))
-        return;
+    try
+    {
+        if(!get_list(lists))
+            return;
 
-    std::vector<std::pair<int, std::vector<stationinfo>>> data;
+        std::vector<std::pair<int, std::vector<stationinfo>>> data;
 
-    if(!get_data(lists, data))
-        return;
+        if(!get_data(lists, data))
+            return;
 
 
-    std::string all_data;
+        std::string all_data;
 
-    for(auto &[lineid, stationdata]:data)
-        all_data += get_filetext(lineid, stationdata);
+        for(auto &[lineid, stationdata]:data)
+            all_data += get_filetext(lineid, stationdata);
 
-    write_to_lua(sdata.sg_dir, all_data, lists, sdata.line, sdata.clear_if);
+        write_to_lua(sdata.sg_dir, all_data, lists, sdata.line, sdata.clear_if, sdata.d_version == 0);
+    }
+    catch (const std::filesystem::filesystem_error &e)
+    {
+        display_info(tr("错误"), stq(e.what()));
+    }
+    catch (const std::exception &e)
+    {
+        display_info(tr("错误"), stq(e.what()));
+    }
 
 }
 
@@ -311,7 +340,7 @@ bool mainui::get_sg()
     sdata.sg_name = sg_name;
     sdata.sg_dir = sg;
 
-    if(!fs::exists(sdata.folder_dir / (sg_name + "_list.xlsx")))
+    if(!fs::exists(sdata.folder_dir / fs::u8path(sg_name + "_list.xlsx")))
     {
         QXlsx::Document doc;
         QXlsx::Format songTi20;
@@ -327,9 +356,9 @@ bool mainui::get_sg()
         doc.write(1, 5, tr("表单名称"));
         doc.write(1, 6, "...");
 
-        doc.saveAs(stq((sdata.folder_dir / (sdata.sg_name + "_list.xlsx")).u8string()));
+        doc.saveAs(stq((sdata.folder_dir / fs::u8path(sdata.sg_name + "_list.xlsx")).u8string()));
 
-        QString q = tr("未检测到列表文件，已自动生成") + stq((sdata.folder_dir / (sdata.sg_name + "_list.xlsx")).u8string());
+        QString q = tr("未检测到列表文件，已自动生成") + stq((sdata.folder_dir / fs::u8path(sdata.sg_name + "_list.xlsx")).u8string());
         q += tr("，如采用列表模式请编辑该文件\n格式见文档，每行一个线路，如有更多文件请向后加。"
              "对于文件中的某些表单，请以空格分隔。"
              "如果需要一个文件里的所有表单请空置“表单名称”栏目，第一行仅做说明，可随意更改。");
@@ -352,17 +381,27 @@ bool mainui::get_sg()
 
 void mainui::read_station_line()
 {
-    readXlsx(sdata.folder_dir / (sdata.sg_name + u8"_station.xlsx"), sdata.station);
-    readXlsx(sdata.folder_dir / (sdata.sg_name + u8"_line.xlsx"), sdata.line);
+    readXlsx(sdata.folder_dir / fs::u8path(sdata.sg_name + u8"_station.xlsx"), sdata.station);
+    readXlsx(sdata.folder_dir / fs::u8path(sdata.sg_name + u8"_line.xlsx"), sdata.line);
 }
 
 
 void mainui::refresh()
 {
-    ui->dir_name->setText(sdata.folder_name.empty()? tr("无") : QString::fromStdString(sdata.folder_name));
-    ui->savegame_name->setText(sdata.sg_name.empty()? tr("无") : QString::fromStdString(sdata.sg_name));
+    auto setPathText = [this](QLabel *l, const QString &full) {
+        l->setText(QFontMetrics(l->font()).elidedText(full, Qt::ElideMiddle, l->maximumWidth()));
+        l->setToolTip(full);
+    };
+    setPathText(ui->dir_name, sdata.folder_name.empty()? tr("无") : QString::fromStdString(sdata.folder_name));
+    setPathText(ui->savegame_name, sdata.sg_name.empty()? tr("无") : QString::fromStdString(sdata.sg_name));
     ui->station_status->setText(sdata.station.empty()? tr("否"):tr("是"));
     ui->line_status->setText(sdata.line.empty()? tr("否"):tr("是"));
+    ui->station_status->setStyleSheet(sdata.station.empty()?
+        QStringLiteral("color: #c62828; font-weight: bold;") :
+        QStringLiteral("color: #2e7d32; font-weight: bold;"));
+    ui->line_status->setStyleSheet(sdata.line.empty()?
+        QStringLiteral("color: #c62828; font-weight: bold;") :
+        QStringLiteral("color: #2e7d32; font-weight: bold;"));
 }
 
 
@@ -396,11 +435,12 @@ bool mainui::get_list(std::vector<std::pair<int, std::vector<std::pair<QString, 
 
             for(int i = 0;;++i)
             {
-                fs::path temppath = sdata.folder_dir / (name + file_sufix(i) + prefix);
+                fs::path temppath = sdata.folder_dir / fs::u8path(name + file_sufix(i) + prefix);
 
                 QString o = stq(temppath.u8string());
 
-                if(!fs::exists(temppath))
+                std::error_code ec;
+                if(!fs::exists(temppath, ec) || ec)
                     break;
 
                 if(count.count(name) > 1)
@@ -431,7 +471,7 @@ bool mainui::get_list(std::vector<std::pair<int, std::vector<std::pair<QString, 
     }
     else
     {
-        fs::path file = sdata.folder_dir / (sdata.sg_name + "_list.xlsx");
+        fs::path file = sdata.folder_dir / fs::u8path(sdata.sg_name + "_list.xlsx");
         if(!fs::exists(file))
         {
             errortype e{errortype::LISTMODE_NOLIST};
@@ -472,6 +512,15 @@ bool mainui::get_list(std::vector<std::pair<int, std::vector<std::pair<QString, 
                 if(!QFile::exists(filename))
                 {
                     errortype e{errortype::LIST_FILE_DONT_EXIST, filename};
+                    return false;
+                }
+
+                QString expectedSuffix = sdata.xls_if ? "xlsx" : "csv";
+                if(QFileInfo(filename).suffix().toLower() != expectedSuffix)
+                {
+                    display_info(tr("错误"),
+                                 tr("列表模式下，文件 %1 不是 %2 格式，请检查文件格式选项或修改列表文件")
+                                     .arg(filename).arg(expectedSuffix.toUpper()));
                     return false;
                 }
 
@@ -992,6 +1041,27 @@ bool mainui::get_data(std::vector<std::pair<int, std::vector<std::pair<QString, 
     if(!printq(prefix, content, suffix))
         return 0;
 
+    if(sdata.clear_if == 2 && sdata.d_clear2_warning)
+    {
+        QMessageBox msgBox;
+        msgBox.setWindowTitle(tr("警告"));
+        msgBox.setIcon(QMessageBox::Warning);
+        msgBox.setText(tr("该操作会清空 %1_line.xlsx 里的线路对应到存档内的时刻表数据，是否确认？")
+                           .arg(QString::fromStdString(sdata.sg_name)));
+        msgBox.setStandardButtons(QMessageBox::NoButton);
+        QPushButton *okButton = msgBox.addButton(tr("确认"), QMessageBox::AcceptRole);
+        msgBox.addButton(tr("取消"), QMessageBox::RejectRole);
+        msgBox.setDefaultButton(okButton);
+        QCheckBox *dontShow = new QCheckBox(tr("下次不再提示"), &msgBox);
+        msgBox.setCheckBox(dontShow);
+        if(msgBox.exec() != QMessageBox::Accepted)
+            return 0;
+        if(dontShow->isChecked())
+        {
+            sdata.d_clear2_warning = false;
+            refresh_file(sdata);
+        }
+    }
 
 
     return 1;
@@ -1093,7 +1163,7 @@ void mainui::on_settinginfo_2_clicked()
 {
     QMessageBox msgBox;
     msgBox.setTextFormat(Qt::RichText);
-    msgBox.setText("Version 1.2<br/>" +
+    msgBox.setText("Version 1.3<br/>" +
         QString(QObject::tr("作者：今天学高代了吗<br/>"
                                        "b站视频教程：<a href=\"https://www.bilibili.com/video/BV1yj2ABwE9v/"
                                        "?spm_id_from=333.1387.homepage.video_card.click&vd_source=3fd42c24215ba0da48b95a40864f298c\">"

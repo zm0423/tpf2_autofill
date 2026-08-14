@@ -349,10 +349,10 @@ xlsx，csv：顾名思义。csv仅支持UTF8格式，请在另存为界面寻找
         <location filename="ui/data_add.ui" line="144"/>
         <source>请安装“时刻表自动录入程序辅助工具”mod
 将它应用至存档内并保存至存档。
-mod可在创意工坊内找到，或者在Github上下载</source>
+mod可在创意工坊内找到，GitHub上也有备份</source>
         <translation>请安装“时刻表自动录入程序辅助工具”mod
 将它应用至存档内并保存至存档。
-mod可在创意工坊内找到（Github上也有备份）</translation>
+mod可在创意工坊内找到，GitHub上也有备份</translation>
     </message>
     <message>
         <location filename="ui/data_add.ui" line="65"/>
@@ -643,8 +643,8 @@ mod可在创意工坊内找到（Github上也有备份）</translation>
     </message>
     <message>
         <location filename="src/mainui.cpp" line="57"/>
-        <source> V1.2</source>
-        <translation> V1.2</translation>
+        <source> V1.3</source>
+        <translation> V1.3</translation>
     </message>
     <message>
         <location filename="src/mainui.cpp" line="164"/>
@@ -817,6 +817,66 @@ mod可在创意工坊内找到（Github上也有备份）</translation>
         <location filename="src/mainui.cpp" line="1113"/>
         <source>确定</source>
         <translation>确定</translation>
+    </message>
+    <message>
+        <source>路径</source>
+        <translation>路径</translation>
+    </message>
+    <message>
+        <source>数据读取方式</source>
+        <translation>数据读取方式</translation>
+    </message>
+    <message>
+        <source>文件格式</source>
+        <translation>文件格式</translation>
+    </message>
+    <message>
+        <source>导入方式</source>
+        <translation>导入方式</translation>
+    </message>
+    <message>
+        <source>兼容版本</source>
+        <translation>兼容版本</translation>
+    </message>
+    <message>
+        <source>（csv模式不支持多表单）</source>
+        <translation>（csv模式不支持多表单）</translation>
+    </message>
+    <message>
+        <source>按线路表清空后导入</source>
+        <translation>按线路表清空后导入</translation>
+    </message>
+    <message>
+        <source>导入时刻表</source>
+        <translation>导入时刻表</translation>
+    </message>
+    <message>
+        <source>忽略最后一行数据</source>
+        <translation>忽略最后一行数据</translation>
+    </message>
+    <message>
+        <source>时刻表&amp;运行图、时刻表1.2</source>
+        <translation>时刻表&amp;运行图、时刻表1.2</translation>
+    </message>
+    <message>
+        <source>时刻表1.3-1.5</source>
+        <translation>时刻表1.3-1.5</translation>
+    </message>
+    <message>
+        <source>警告</source>
+        <translation>警告</translation>
+    </message>
+    <message>
+        <source>该操作会清空 %1_line.xlsx 里的线路对应到存档内的时刻表数据，是否确认？</source>
+        <translation>该操作会清空 %1_line.xlsx 里的线路对应到存档内的时刻表数据，是否确认？</translation>
+    </message>
+    <message>
+        <source>下次不再提示</source>
+        <translation>下次不再提示</translation>
+    </message>
+    <message>
+        <source>列表模式下，文件 %1 不是 %2 格式，请检查文件格式选项或修改列表文件</source>
+        <translation>列表模式下，文件 %1 不是 %2 格式，请检查文件格式选项或修改列表文件</translation>
     </message>
 </context>
 </TS>

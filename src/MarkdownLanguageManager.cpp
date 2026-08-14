@@ -46,10 +46,12 @@ bool MarkdownLanguageManager::loadQtTranslations(Language lang)
 
     // 加载应用翻译
     QString appTransFile = QString(":/translations/tpf2_autofill_%1.qm").arg(langCode);
-    if (m_appTranslator.load(appTransFile)) {
+    if (m_appTranslator.load(appTransFile))
+    {
         QCoreApplication::installTranslator(&m_appTranslator);
-    } else if (lang == Chinese) {
-        // 中文翻译加载失败时警告
+    }
+    else
+    {
         qWarning() << "Cannot load translation file:" << appTransFile;
     }
 

@@ -1,4 +1,4 @@
-# Transport Fever 2 Timetable Mod Auto-Entry Tool
+# Transport Fever 2 Timetable Mod AutoFill Tool
 
 [简体中文](./README.md) | [English](./README_en.md)
 
@@ -29,7 +29,7 @@ Go to the [Releases](https://github.com/zm0423/tpf2_autofill/releases) page, dow
     >   **Tip**: You can also locate it in-game via **Settings → Advanced → Open User Data Folder**.
 
 3. **Download and activate assist mod**
-   - Download "**Timetable autofill program assist tool**" mod in the workshop.
+   - Download "**Timetable AutoFill Program Assist Tool**" mod in the workshop.
    - Activate it in your save game and save it.
 
 
@@ -38,9 +38,9 @@ Go to the [Releases](https://github.com/zm0423/tpf2_autofill/releases) page, dow
     *   Select either **Overwrite** or **Add only**. **Overwrite** is recommended becasue it is better in auto sorting.
     *   **About Routes**: The software supports truncating long route names. For example, "G1/2 Shanghai-Beijing" can be truncated to "G1" to facilitate matching with timetable files. The truncation character can be customized.
 
-    > **Important:**
-    > **Data Consistency is Crucial**: When performing the "Synchronize Timetables" operation later, the **station names** and **route names** in your timetable data must **exactly match** the data imported here (only leading/trailing spaces are allowed).
-    > **Ensure Correct ID Recognition**: Whether you directly modify the timetable files or the generated `_station.xlsx` / `_line.xlsx` files, the ultimate goal is for the software to **correctly match names to the internal game IDs**. If mismatches occur, please check and modify the relevant data yourself.
+    > **Important:**     
+    > **Data Consistency is Crucial**: When performing the "Synchronize Timetables" operation later, the **station names** and **route names** in your timetable data must **exactly match** the data imported here (only leading/trailing spaces are allowed).     
+    > **Ensure Correct ID Recognition**: Whether you directly modify the timetable files or the generated `_station.xlsx` / `_line.xlsx` files, the ultimate goal is for the software to **correctly match names to the internal game IDs**. If mismatches occur, please check and modify the relevant data yourself.     
     > **Make sure the data you actually use is unique**: No matter line or station, if you use this name in your timetable data, make sure it is unique.(If you do not use that station or line, duplicate is allowed)
 
     *   After successful import, two files will be generated: `[SaveName]_station.xlsx` and `[SaveName]_line.xlsx`.
@@ -81,7 +81,8 @@ Go to the [Releases](https://github.com/zm0423/tpf2_autofill/releases) page, dow
 | :--- | :--- |
 | **xlsx, csv** | Select the format of the import files. **Note**: `csv` only supports UTF-8 encoding (choose this option in the 'Save As' dialog), and sheet names are ignored in List Match Mode. |
 | **Ignore Last Data Row** | When checked, the program will ignore the last row of the data table. |
-| **Timetable Stacking** | **Example**: If a train runs 3 identical schedules within 60 minutes, enabling this option will record 3 timetables; disabling it will record only 1. |
+| **Timetable Stacking** | **Example**: If a train runs 3 identical round trips within 60 minutes, **enabling** this option stacks the 3 trips into 3 separate timetables; **disabling** it records all 3 trips as one complete line. |
+| **Compatibility Version** | Select the data format matching your installed timetable mod: **"Timetable & Train Diagram, Timetable 1.2"** stores line IDs as string keys, while **"Timetable 1.3-1.5"** uses numeric keys. During import, all line entries in the save will be migrated to the selected key format automatically. **Make sure the choice matches your mod, otherwise the game will fail to load the timetables.** |
 
 ## Important Notes and Format Requirements
 
