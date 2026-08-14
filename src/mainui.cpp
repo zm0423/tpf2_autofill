@@ -55,7 +55,7 @@ mainui::mainui(QWidget *parent)
     m_clearGroup->addButton(ui->clear_1, 1);
     m_clearGroup->addButton(ui->clear_2, 2);
     m_clearGroup->addButton(ui->clear_3, 3);
-    setWindowTitle(tr("狂热运输2 时刻表自动输入") + tr(" V1.2"));
+    setWindowTitle(tr("狂热运输2 时刻表自动输入") + tr(" V1.3"));
 
     QObject::connect(m_easyGroup, &QButtonGroup::idClicked,
                      this, [&](int p) {
@@ -1038,11 +1038,13 @@ bool mainui::get_data(std::vector<std::pair<int, std::vector<std::pair<QString, 
         msgBox.setIcon(QMessageBox::Warning);
         msgBox.setText(tr("该操作会清空 %1_line.xlsx 里的线路对应到存档内的时刻表数据，是否确认？")
                            .arg(QString::fromStdString(sdata.sg_name)));
-        msgBox.setStandardButtons(QMessageBox::Ok | QMessageBox::Cancel);
-        msgBox.setDefaultButton(QMessageBox::Cancel);
+        msgBox.setStandardButtons(QMessageBox::NoButton);
+        QPushButton *okButton = msgBox.addButton(tr("确认"), QMessageBox::AcceptRole);
+        msgBox.addButton(tr("取消"), QMessageBox::RejectRole);
+        msgBox.setDefaultButton(okButton);
         QCheckBox *dontShow = new QCheckBox(tr("下次不再提示"), &msgBox);
         msgBox.setCheckBox(dontShow);
-        if(msgBox.exec() != QMessageBox::Ok)
+        if(msgBox.exec() != QMessageBox::Accepted)
             return 0;
         if(dontShow->isChecked())
         {
@@ -1151,7 +1153,7 @@ void mainui::on_settinginfo_2_clicked()
 {
     QMessageBox msgBox;
     msgBox.setTextFormat(Qt::RichText);
-    msgBox.setText("Version 1.2<br/>" +
+    msgBox.setText("Version 1.3<br/>" +
         QString(QObject::tr("作者：今天学高代了吗<br/>"
                                        "b站视频教程：<a href=\"https://www.bilibili.com/video/BV1yj2ABwE9v/"
                                        "?spm_id_from=333.1387.homepage.video_card.click&vd_source=3fd42c24215ba0da48b95a40864f298c\">"

@@ -26,7 +26,8 @@
 
 
 bool find_next_entry(const std::string& text, size_t start, size_t end,
-                     int& lid, size_t& entryStart, size_t& bodyStart, size_t& bodyEnd);
+                     int& lid, size_t& entryStart, size_t& bodyStart, size_t& bodyEnd,
+                     bool& quotedKey);
 size_t find_entry_end(const std::string& text, size_t bodyStart);
 bool remove_field(std::string& text, size_t start, size_t end, const std::string& name);
 
@@ -318,28 +319,48 @@ bool write_to_lua(const std::filesystem::path& filename,
     --blockEnd; // 指向 '}'
 
     // 扫描块内所有线路条目（只读）
-    struct Entry { size_t bodyStart; size_t bodyEnd; int lid; };
+    struct Entry { size_t entryStart; size_t bodyStart; size_t bodyEnd; int lid; bool quotedKey; };
     std::vector<Entry> entries;
     {
         size_t scan = blockStart + 1;
         int lid;
         size_t es, bs, be;
-        while(find_next_entry(text, scan, blockEnd, lid, es, bs, be))
+        bool quoted;
+        while(find_next_entry(text, scan, blockEnd, lid, es, bs, be, quoted))
         {
-            entries.push_back({bs, be, lid});
+            entries.push_back({es, bs, be, lid, quoted});
             scan = be + 1;
         }
     }
 
-    // 从后往前处理：只删除/替换受管字段，其余内容保留
+    // 从后往前处理：键格式迁移 + 删除/替换受管字段，其余内容保留
     for(auto it = entries.rbegin(); it != entries.rend(); ++it)
     {
+        size_t bodyStart = it->bodyStart;
+        size_t bodyEnd = it->bodyEnd;
+
+        // 键格式与所选版本不一致时，迁移键格式
+        if(it->quotedKey != quotedKeys)
+        {
+            size_t kb = it->entryStart;
+            size_t ke = text.find(']', kb);
+            if(ke != std::string::npos)
+            {
+                ++ke; // 指向 ']' 之后
+                std::string newKey = quotedKeys ?
+                            "[\"" + std::to_string(it->lid) + "\"]" :
+                            "[" + std::to_string(it->lid) + "]";
+                long long delta = static_cast<long long>(newKey.size()) -
+                                  static_cast<long long>(ke - kb);
+                text.replace(kb, ke - kb, newKey);
+                bodyStart = static_cast<size_t>(static_cast<long long>(bodyStart) + delta);
+                bodyEnd = static_cast<size_t>(static_cast<long long>(bodyEnd) + delta);
+            }
+        }
+
         bool needRemove = clearAll || toClear.count(it->lid) || toReplace.count(it->lid);
         if(!needRemove)
             continue;
-
-        size_t bodyStart = it->bodyStart;
-        size_t bodyEnd = it->bodyEnd;
 
         remove_field(text, bodyStart, bodyEnd, "stations");
         bodyEnd = find_entry_end(text, bodyStart);
@@ -439,7 +460,8 @@ bool write_to_lua(const std::filesystem::path& filename,
  * @brief 在 [start,end) 内查找下一个 "[id] = {" 或 "[\"id\"] = {" 条目
  */
 bool find_next_entry(const std::string& text, size_t start, size_t end,
-                     int& lid, size_t& entryStart, size_t& bodyStart, size_t& bodyEnd)
+                     int& lid, size_t& entryStart, size_t& bodyStart, size_t& bodyEnd,
+                     bool& quotedKey)
 {
     size_t i = start;
     while(i < end)
@@ -498,6 +520,7 @@ bool find_next_entry(const std::string& text, size_t start, size_t end,
         lid = std::stoi(text.substr(dStart, p - dStart - (quoted ? 1 : 0)));
         entryStart = i;
         bodyStart = e + 1;
+        quotedKey = quoted;
         int bc = 1;
         size_t b = bodyStart;
         for(; b < end && bc > 0; ++b)

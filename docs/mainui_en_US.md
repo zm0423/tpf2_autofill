@@ -50,6 +50,7 @@
 | **xlsx, csv** | Select the format of the import files. **Note**: `csv` only supports UTF-8 encoding (choose this option in the 'Save As' dialog), and sheet names are ignored in List Match Mode. |
 | **Ignore Last Data Row** | When checked, the program will ignore the last row of the data table. |
 | **Timetable Stacking** | **Example**: If a train runs 3 identical schedules within 60 minutes, enabling this option will record 3 timetables; disabling it will record only 1. |
+| **Compatibility Version** | Select the data format matching your installed timetable mod: **"Timetable & Train Diagram, Timetable 1.2"** stores line IDs as string keys, while **"Timetable 1.3-1.5"** uses numeric keys. During import, all line entries in the save will be migrated to the selected key format automatically. **Make sure the choice matches your mod, otherwise the game will fail to load the timetables.** |
 
 ## Important Notes and Format Requirements
 

@@ -221,35 +221,34 @@ void data_add::on_instruction_2_clicked()
 {
     char trunc;
     while (true) {
-        bool ok = false;
-
         // 弹出输入对话框
-        QString input = QInputDialog::getText(
-            nullptr,
-            tr("截断"),
-            tr("输入截断字符 默认/ \n"
+        QInputDialog dialog(this);
+        dialog.setWindowTitle(tr("截断"));
+        dialog.setLabelText(tr("输入截断字符 默认/ \n"
             "例如\"G1/2 上海-北京\"会被截断成\"G1\"，用于时刻表匹配 \n"
             "被截断的线路在列表里会排序在相对上侧的位置\n"
             "\n"
             "请输入一个ASCII字符（允许空格）：\n"
             "• 可见字符: A-Z, a-z, 0-9, !@#$%^&*()等\n"
             "• 允许空格\n"
-            "• 不允许其他控制字符（Tab、换行等）"),
-            QLineEdit::Normal,
-            "",
-            &ok
-            );
+            "• 不允许其他控制字符（Tab、换行等）"));
+        dialog.setOkButtonText(tr("确认"));
+        dialog.setCancelButtonText(tr("取消"));
+        dialog.setTextValue("");
+        dialog.setInputMode(QInputDialog::TextInput);
 
         // 用户点击取消
-        if (!ok) {
+        if (dialog.exec() != QDialog::Accepted) {
             trunc = '\0';
             break;            // 返回空字符表示取消
         }
 
+        QString input = dialog.textValue();
+
         // 检查输入长度
         if (input.length() != 1) {
-            QMessageBox::warning(nullptr, tr("错误"),
-                                 input.isEmpty() ? tr("输入不能为空！") : tr("只能输入一个字符！"));
+            display_info(tr("错误"),
+                         input.isEmpty() ? tr("输入不能为空！") : tr("只能输入一个字符！"));
             continue;
         }
 
@@ -260,9 +259,9 @@ void data_add::on_instruction_2_clicked()
         // 检查是否为ASCII字符（0-127）
         // 注意：qchar.unicode() 可能返回大于255的值
         if (qchar.unicode() > 127) {
-            QMessageBox::warning(nullptr, tr("错误"),
-                                 QString(tr("'%1' 不是ASCII字符！\n请输入0-127范围内的字符。"))
-                                     .arg(qchar));
+            display_info(tr("错误"),
+                         QString(tr("'%1' 不是ASCII字符！\n请输入0-127范围内的字符。"))
+                             .arg(qchar));
             continue;
         }
 
@@ -289,7 +288,7 @@ void data_add::on_instruction_2_clicked()
                 msg = QString(tr("字符 0x%1 是不可见的控制字符！"))
                           .arg(static_cast<unsigned char>(ch), 2, 16, QChar('0')).toUpper();
             }
-            QMessageBox::warning(nullptr, tr("错误"), msg);
+            display_info(tr("错误"), msg);
             continue;
         }
     }

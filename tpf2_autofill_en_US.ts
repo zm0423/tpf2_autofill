@@ -525,8 +525,8 @@ and import.</translation>
     </message>
     <message>
         <location filename="src/mainui.cpp" line="57"/>
-        <source> V1.2</source>
-        <translation> V1.2</translation>
+        <source> V1.3</source>
+        <translation> V1.3</translation>
     </message>
     <message>
         <location filename="src/mainui.cpp" line="164"/>
