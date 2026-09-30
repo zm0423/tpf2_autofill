@@ -137,8 +137,8 @@ xlsx，csv：顾名思义。csv仅支持UTF8格式，请在另存为界面寻找
     </message>
     <message>
         <location filename="src/mainui.cpp" line="1707"/>
-        <source>作者：今天学高代了吗&lt;br/&gt;b站视频教程：&lt;a href=&quot;https://www.bilibili.com/video/BV1yj2ABwE9v/?spm_id_from=333.1387.homepage.video_card.click&amp;vd_source=3fd42c24215ba0da48b95a40864f298c&quot;&gt;https://www.bilibili.com/video/BV1yj2ABwE9v&lt;/a&gt; &lt;br/&gt;github：&lt;a href=&quot;https://github.com/zm0423/tpf2_autofill&quot;&gt; https://github.com/zm0423/tpf2_autofill&lt;/a&gt; &lt;br/&gt;邮箱：15800733391@163.com &lt;br/&gt;2025.12.14</source>
-        <translation>作者：今天学高代了吗&lt;br/&gt;b站视频教程：&lt;a href=&quot;https://www.bilibili.com/video/BV1yj2ABwE9v/?spm_id_from=333.1387.homepage.video_card.click&amp;vd_source=3fd42c24215ba0da48b95a40864f298c&quot;&gt;https://www.bilibili.com/video/BV1yj2ABwE9v&lt;/a&gt; &lt;br/&gt;github：&lt;a href=&quot;https://github.com/zm0423/tpf2_autofill&quot;&gt; https://github.com/zm0423/tpf2_autofill&lt;/a&gt; &lt;br/&gt;邮箱：15800733391@163.com &lt;br/&gt;2025.12.14</translation>
+        <source>作者：今天学高代了吗&lt;br/&gt;b站视频教程：&lt;a href=&quot;https://www.bilibili.com/video/BV1xxaZ6WE2E&quot;&gt;https://www.bilibili.com/video/BV1xxaZ6WE2E&lt;/a&gt; &lt;br/&gt;github：&lt;a href=&quot;https://github.com/zm0423/tpf2_autofill&quot;&gt; https://github.com/zm0423/tpf2_autofill&lt;/a&gt; &lt;br/&gt;邮箱：15800733391@163.com &lt;br/&gt;2025.12.14</source>
+        <translation>作者：今天学高代了吗&lt;br/&gt;b站视频教程：&lt;a href=&quot;https://www.bilibili.com/video/BV1xxaZ6WE2E&quot;&gt;https://www.bilibili.com/video/BV1xxaZ6WE2E&lt;/a&gt; &lt;br/&gt;github：&lt;a href=&quot;https://github.com/zm0423/tpf2_autofill&quot;&gt; https://github.com/zm0423/tpf2_autofill&lt;/a&gt; &lt;br/&gt;邮箱：15800733391@163.com &lt;br/&gt;2025.12.14</translation>
     </message>
     <message>
         <location filename="src/util.cpp" line="71"/>
@@ -418,10 +418,12 @@ xlsx，csv：顾名思义。csv仅支持UTF8格式，请在另存为界面寻找
         <location filename="ui/data_add.ui" line="144"/>
         <source>请安装“时刻表自动录入程序辅助工具”mod
 将它应用至存档内并保存至存档。
-mod可在创意工坊内找到，GitHub上也有备份</source>
+mod可在创意工坊内找到，GitHub上也有备份
+三代请安装Timetable AutoFill，请在游戏打开时录入线路和站点</source>
         <translation>请安装“时刻表自动录入程序辅助工具”mod
 将它应用至存档内并保存至存档。
-mod可在创意工坊内找到，GitHub上也有备份</translation>
+mod可在创意工坊内找到，GitHub上也有备份
+三代请安装Timetable AutoFill，请在游戏打开时录入线路和站点</translation>
     </message>
     <message>
         <location filename="ui/data_add.ui" line="65"/>
@@ -615,7 +617,7 @@ mod可在创意工坊内找到，GitHub上也有备份</translation>
     <message>
         <location filename="ui/mainui.ui" line="14"/>
         <source>mainui</source>
-        <translation>狂热运输2 时刻表mod自动录入</translation>
+        <translation>狂热运输2/3 时刻表自动输入 V2.0</translation>
     </message>
     <message>
         <location filename="ui/mainui.ui" line="413"/>
@@ -668,8 +670,9 @@ mod可在创意工坊内找到，GitHub上也有备份</translation>
     </message>
     <message>
         <location filename="ui/mainui.ui" line="27"/>
-        <source>狂热运输2 时刻表mod自动录入</source>
-        <translation>狂热运输2 时刻表mod自动录入</translation>
+        <location filename="src/mainui.cpp" line="872"/>
+        <source>狂热运输2/3 时刻表mod自动录入</source>
+        <translation>狂热运输2/3 时刻表mod自动录入</translation>
     </message>
     <message>
         <location filename="ui/mainui.ui" line="61"/>
@@ -752,13 +755,13 @@ mod可在创意工坊内找到，GitHub上也有备份</translation>
     </message>
     <message>
         <location filename="src/mainui.cpp" line="65"/>
-        <source>狂热运输2 时刻表自动输入</source>
-        <translation>狂热运输2 时刻表自动输入</translation>
+        <source>狂热运输2/3 时刻表自动输入</source>
+        <oldsource>狂热运输2 时刻表自动输入</oldsource>
+        <translation>狂热运输2/3 时刻表自动输入</translation>
     </message>
     <message>
-        <location filename="src/mainui.cpp" line="65"/>
         <source> V1.3</source>
-        <translation> V1.3</translation>
+        <translation type="vanished"> V1.3</translation>
     </message>
     <message>
         <location filename="src/mainui.cpp" line="250"/>
@@ -966,19 +969,15 @@ C:\Program Files (x86)\Steam\userdata\&lt;你的ID&gt;\3493540\local\tpf3_timeta
         <translation>切换回二代</translation>
     </message>
     <message>
-        <location filename="src/mainui.cpp" line="840"/>
-        <source>狂热运输%1 时刻表mod自动录入</source>
-        <translation>狂热运输%1 时刻表mod自动录入</translation>
-    </message>
-    <message>
         <location filename="src/mainui.cpp" line="855"/>
         <source>未读取</source>
         <translation>未读取</translation>
     </message>
     <message>
         <location filename="src/mainui.cpp" line="856"/>
-        <source>当前游戏中存档（三代无存档文件，详情见下）：</source>
-        <translation>当前游戏中存档（三代无存档文件，详情见下）：</translation>
+        <source>当前游戏中存档：</source>
+        <oldsource>当前游戏中存档（三代无存档文件，详情见下）：</oldsource>
+        <translation>当前游戏中存档：</translation>
     </message>
     <message>
         <location filename="src/mainui.cpp" line="858"/>
@@ -1176,6 +1175,11 @@ C:\Program Files (x86)\Steam\userdata\&lt;你的ID&gt;\3493540\local\tpf3_timeta
         <location filename="src/mainui.cpp" line="1594"/>
         <source>下次不再提示</source>
         <translation>下次不再提示</translation>
+    </message>
+    <message>
+        <location filename="src/mainui.cpp" line="65"/>
+        <source> V2.0</source>
+        <translation> V2.0</translation>
     </message>
     <message>
         <location filename="src/mainui.cpp" line="1041"/>

@@ -46,6 +46,7 @@ struct my_data
     bool d_clear2_warning{true};
     bool d_tpf3_notice{};   // 三代注意事项：已勾选“下次不再提示”
     int tpf2_version{};     // 上次的二代子版本（0/1），从三代切回时恢复
+    std::filesystem::path tpf2_sg_dir{};   // 上次的二代存档文件路径，从三代切回二代时恢复（二代工作文件带存档名前缀）
     int d_version{};      // 0=字符串键(TPF2) 1=数字键(TPF2) 2=狂热运输3
     int cycle_index{};    // TPF3 周期档位 0..5 → 3600/7200/10800/21600/43200/86400
 

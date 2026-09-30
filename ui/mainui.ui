@@ -24,7 +24,7 @@
         </font>
        </property>
        <property name="text">
-        <string>狂热运输2 时刻表mod自动录入</string>
+        <string>狂热运输2/3 时刻表mod自动录入</string>
        </property>
        <property name="alignment">
         <set>Qt::AlignmentFlag::AlignCenter</set>
@@ -98,8 +98,8 @@
             <property name="textInteractionFlags">
              <set>Qt::TextInteractionFlag::TextSelectableByMouse</set>
             </property>
-            <property name="styleSheet">
-             <string notr="true">background-color: rgba(0, 0, 0, 20); border: 1px solid rgba(0, 0, 0, 40); border-radius: 3px; padding: 2px 6px;</string>
+            <property name="pathBox" stdset="0">
+             <bool>true</bool>
             </property>
             <property name="maximumSize">
              <size>
@@ -137,8 +137,8 @@
             <property name="textInteractionFlags">
              <set>Qt::TextInteractionFlag::TextSelectableByMouse</set>
             </property>
-            <property name="styleSheet">
-             <string notr="true">background-color: rgba(0, 0, 0, 20); border: 1px solid rgba(0, 0, 0, 40); border-radius: 3px; padding: 2px 6px;</string>
+            <property name="pathBox" stdset="0">
+             <bool>true</bool>
             </property>
             <property name="maximumSize">
              <size>

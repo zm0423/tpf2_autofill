@@ -62,7 +62,7 @@ mainui::mainui(QWidget *parent)
     m_clearGroup->addButton(ui->clear_1, 1);
     m_clearGroup->addButton(ui->clear_2, 2);
     m_clearGroup->addButton(ui->clear_3, 3);
-    setWindowTitle(tr("狂热运输2 时刻表自动输入") + tr(" V1.3"));
+    setWindowTitle(tr("狂热运输2/3 时刻表自动输入") + tr(" V2.0"));
 
     QObject::connect(m_easyGroup, &QButtonGroup::idClicked,
                      this, [&](int p) {
@@ -208,6 +208,9 @@ void mainui::init()
             sdata.tpf2_version = qBound(0, std::stoi(buf), 1);
         if(!sdata.tpf3())
             sdata.tpf2_version = sdata.d_version;
+
+        if(getline(sys_file,buf,'\n'))
+            sdata.tpf2_sg_dir = fs::u8path(buf);
 
         // 三代模式先修正工作文件基名，再读站点/线路表（否则会用桥接目录名去读，读不到）
         if(sdata.tpf3())
@@ -524,8 +527,24 @@ void mainui::on_switch_tpf3_clicked()
 {
     if(sdata.tpf3())
     {
-        // 切回二代：恢复上次的二代子版本（0/1）
+        // 切回二代：恢复上次的二代子版本（0/1）和二代存档。
+        // 二代工作文件带存档名前缀、三代前缀统一为 tpf3_timetable，
+        // 必须先恢复前缀再重新检测站点/线路数据，否则“存在站点/线路数据”是错的
         sdata.d_version = qBound(0, sdata.tpf2_version, 1);
+
+        if(!sdata.tpf2_sg_dir.empty() && fs::exists(sdata.tpf2_sg_dir))
+        {
+            sdata.sg_dir = sdata.tpf2_sg_dir;
+            sdata.sg_name = sdata.sg_dir.stem().u8string();
+            sdata.sys_save_dir = sdata.sg_dir.parent_path();
+        }
+        else
+        {
+            sdata.sg_dir.clear();
+            sdata.sg_name.clear();
+        }
+
+        read_station_line();
         refresh_file(sdata);
         refresh();
         return;
@@ -569,8 +588,13 @@ void mainui::on_switch_tpf3_clicked()
         }
     }
 
+    // 记住二代存档（三代工作文件前缀统一为 tpf3_timetable，切回二代时要靠它恢复存档前缀）
+    if(!sdata.sg_dir.empty())
+        sdata.tpf2_sg_dir = sdata.sg_dir;
+
     sdata.d_version = 2;
     ensure_tpf3_dir();
+    read_station_line();        // 按三代前缀（tpf3_timetable_*）重新检测站点/线路数据
     refresh_file(sdata);
     refresh();
     start_bridge_probe(true);   // 切到三代后自动刷新一次（静默）
@@ -670,6 +694,38 @@ bool mainui::get_folder()
     sdata.folder_name = folder_name;
     sdata.folder_dir = folder;
 
+    if(sdata.tpf3())
+    {
+        // 三代没有“选存档”这一步：换完根目录后在这里完成数据目录检测，
+        // 并按二代“选完存档”的习惯生成列表文件
+        ensure_tpf3_dir();
+        if(!sdata.sg_name.empty() &&
+           !fs::exists(sdata.folder_dir / fs::u8path(sdata.sg_name + "_list.xlsx")))
+        {
+            QXlsx::Document doc;
+            QXlsx::Format songTi20;
+            songTi20.setFontName(tr("宋体"));
+            songTi20.setFontSize(20);
+
+            doc.currentWorksheet()->setColumnFormat(1, 6, songTi20);
+
+            doc.write(1, 1, tr("线路"));
+            doc.write(1, 2, tr("文件1"));
+            doc.write(1, 3, tr("表单名称"));
+            doc.write(1, 4, tr("文件2"));
+            doc.write(1, 5, tr("表单名称"));
+            doc.write(1, 6, tr("..."));
+
+            doc.saveAs(stq((sdata.folder_dir / fs::u8path(sdata.sg_name + "_list.xlsx")).u8string()));
+
+            QString q = tr("未检测到列表文件，已自动生成") + stq((sdata.folder_dir / fs::u8path(sdata.sg_name + "_list.xlsx")).u8string());
+            q += tr("，如采用列表模式请编辑该文件\n格式见文档，每行一个线路，如有更多文件请向后加。"
+                 "对于文件中的某些表单，请以空格分隔。"
+                 "如果需要一个文件里的所有表单请空置“表单名称”栏目，第一行仅做说明，可随意更改。");
+            display_info(tr("提示"), std::move(q));
+        }
+    }
+
     refresh();
     refresh_file(sdata);
 
@@ -752,6 +808,7 @@ bool mainui::get_sg()
 
     sdata.sg_name = sg_name;
     sdata.sg_dir = sg;
+    sdata.tpf2_sg_dir = sg;   // 记住二代存档，供从三代切回时恢复
 
     if(!fs::exists(sdata.folder_dir / fs::u8path(sg_name + "_list.xlsx")))
     {
@@ -837,7 +894,7 @@ void mainui::refresh()
             "QPushButton { background-color: #2e7d32; color: white; border-radius: 5px; padding: 3px 12px; font-weight: bold; }"));
     }
 
-    ui->label->setText(tr("狂热运输%1 时刻表mod自动录入").arg(tpf3 ? "3" : "2"));
+    ui->label->setText(tr("狂热运输2/3 时刻表mod自动录入"));
 
     export_info bridgeInfo;
     bool bridgeRead = false;
@@ -853,7 +910,7 @@ void mainui::refresh()
                         : (bridgeRead && !bridgeInfo.save_id.empty())
                               ? stq(bridgeInfo.save_id)
                               : tr("未读取"));
-        ui->text2->setText(tr("当前游戏中存档（三代无存档文件，详情见下）："));
+        ui->text2->setText(tr("当前游戏中存档："));
         if(!(m_probe_timer && m_probe_timer->isActive() && !m_probe_silent))
             ui->change_sg->setText(tr("刷新"));
         const int cycle_sec = (sdata.probe_ok && sdata.probe_cycle_sec > 0)
@@ -1703,11 +1760,10 @@ void mainui::on_settinginfo_2_clicked()
 {
     QMessageBox msgBox;
     msgBox.setTextFormat(Qt::RichText);
-    msgBox.setText("Version 1.3<br/>" +
+    msgBox.setText("Version 2.0<br/>" +
         QString(QObject::tr("作者：今天学高代了吗<br/>"
-                                       "b站视频教程：<a href=\"https://www.bilibili.com/video/BV1yj2ABwE9v/"
-                                       "?spm_id_from=333.1387.homepage.video_card.click&vd_source=3fd42c24215ba0da48b95a40864f298c\">"
-                                       "https://www.bilibili.com/video/BV1yj2ABwE9v</a> <br/>"
+                                       "b站视频教程：<a href=\"https://www.bilibili.com/video/BV1xxaZ6WE2E\">"
+                                       "https://www.bilibili.com/video/BV1xxaZ6WE2E</a> <br/>"
                                        "github：<a href=\"https://github.com/zm0423/tpf2_autofill\"> "
                                        "https://github.com/zm0423/tpf2_autofill</a> <br/>"
                                        "邮箱：15800733391@163.com <br/>"
@@ -1747,6 +1803,8 @@ void mainui::onLanguageChanged()
     // 更新按钮文本
     updateLanguageButton();
     ui->retranslateUi(this);
+    // retranslateUi 会用翻译文件里的旧窗口标题覆盖构造函数里设置的标题，这里补回
+    setWindowTitle(tr("狂热运输2/3 时刻表自动输入") + tr(" V2.0"));
     refresh();
 }
 

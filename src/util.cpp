@@ -995,6 +995,7 @@ void refresh_file(const my_data &sdata)
     file << sdata.steam_user << '\n';
     file << sdata.d_tpf3_notice << '\n';
     file << sdata.tpf2_version << '\n';
+    file << sdata.tpf2_sg_dir.u8string() << '\n';
 
     file.close();
 }

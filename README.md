@@ -28,11 +28,11 @@ Go to the [Releases](https://github.com/zm0423/tpf2_autofill/releases) page, dow
         `C:\Program Files (x86)\Steam\userdata\XXXX\1066780\local\save\xxx.lua`
         (Depends on your Steam installation location).
     >   **Tip**: You can also locate it in-game via **Settings → Advanced → Open User Data Folder**.
-    >   **TPF3 Tip**: TPF3 mode does not require selecting a save file; the data folder is detected automatically. See “Transport Fever 3 (TPF3) Mode” below.
+    >   **TPF3 Tip**: TPF3 mode does not require selecting a save file; the data folder is detected automatically. See “Transport Fever 3 (TPF3) Special Notes” below.
 
 3. **Download and activate assist mod**
-   - Download "**Timetable AutoFill Program Assist Tool**" mod in the workshop.
-   - Activate it in your save game and save it.
+   - **TPF2**: Download the "**Timetable AutoFill Program Assist Tool**" mod in the workshop. Activate it in your save game and save it.
+   - **TPF3**: Open the in-game **Mod Hub** and subscribe to and enable the "**Timetable AutoFill**" mod on mod.io.
 
 
 4.  **Import Data into the Software**
@@ -86,7 +86,7 @@ Go to the [Releases](https://github.com/zm0423/tpf2_autofill/releases) page, dow
 | **Timetable Stacking** | **Example**: If a train runs 3 identical round trips within 60 minutes, **enabling** this option stacks the 3 trips into 3 separate timetables; **disabling** it records all 3 trips as one complete line. |
 | **Compatibility Version** | Select the data format matching your installed timetable mod: **"Timetable & Train Diagram, Timetable 1.2"** stores line IDs as string keys, while **"Timetable 1.3-1.5"** uses numeric keys. During import, all line entries in the save will be migrated to the selected key format automatically. **Make sure the choice matches your mod, otherwise the game will fail to load the timetables.** |
 
-## Transport Fever 3 (TPF3) Mode
+## Transport Fever 3 (TPF3) Special Notes
 
 Click the **“Switch to TPF3”** button in the top-right corner to switch (the choice is remembered). Data exchange in TPF3 is quite different from TPF2, so please read the following carefully:
 
