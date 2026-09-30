@@ -15,8 +15,8 @@ Cannot load document.</translation>
     <name>QObject</name>
     <message>
         <location filename="src/mainui.cpp" line="1707"/>
-        <source>作者：今天学高代了吗&lt;br/&gt;b站视频教程：&lt;a href=&quot;https://www.bilibili.com/video/BV1yj2ABwE9v/?spm_id_from=333.1387.homepage.video_card.click&amp;vd_source=3fd42c24215ba0da48b95a40864f298c&quot;&gt;https://www.bilibili.com/video/BV1yj2ABwE9v&lt;/a&gt; &lt;br/&gt;github：&lt;a href=&quot;https://github.com/zm0423/tpf2_autofill&quot;&gt; https://github.com/zm0423/tpf2_autofill&lt;/a&gt; &lt;br/&gt;邮箱：15800733391@163.com &lt;br/&gt;2025.12.14</source>
-        <translation>Author：zm0423&lt;br/&gt;github：&lt;a href=&quot;https://github.com/zm0423/tpf2_autofill&quot;&gt; https://github.com/zm0423/tpf2_autofill&lt;/a&gt; &lt;br/&gt;email：15800733391@163.com &lt;br/&gt;YouTube：&lt;a href=&quot;https://youtu.be/DP7g3r3tlh0&quot;&gt; https://youtu.be/DP7g3r3tlh0&lt;/a&gt; &lt;br/&gt; bilibili：&lt;a href=&quot;https://www.bilibili.com/video/BV1F8qsB8Ezg&quot;&gt;https://www.bilibili.com/video/BV1F8qsB8Ezg&lt;/a&gt; &lt;br/&gt;2025.12.14</translation>
+        <source>作者：今天学高代了吗&lt;br/&gt;b站视频教程：&lt;a href=&quot;https://www.bilibili.com/video/BV1xxaZ6WE2E&quot;&gt;https://www.bilibili.com/video/BV1xxaZ6WE2E&lt;/a&gt; &lt;br/&gt;github：&lt;a href=&quot;https://github.com/zm0423/tpf2_autofill&quot;&gt; https://github.com/zm0423/tpf2_autofill&lt;/a&gt; &lt;br/&gt;邮箱：15800733391@163.com &lt;br/&gt;2025.12.14</source>
+        <translation>Author：zm0423&lt;br/&gt;github：&lt;a href=&quot;https://github.com/zm0423/tpf2_autofill&quot;&gt; https://github.com/zm0423/tpf2_autofill&lt;/a&gt; &lt;br/&gt;email：15800733391@163.com &lt;br/&gt;YouTube：&lt;a href=&quot;https://youtu.be/DP7g3r3tlh0&quot;&gt; https://youtu.be/DP7g3r3tlh0&lt;/a&gt; &lt;br/&gt; bilibili：&lt;a href=&quot;https://www.bilibili.com/video/BV1xxaZ6WE2E&quot;&gt;https://www.bilibili.com/video/BV1xxaZ6WE2E&lt;/a&gt; &lt;br/&gt;2025.12.14</translation>
     </message>
     <message>
         <location filename="src/util.cpp" line="71"/>
@@ -176,7 +176,7 @@ Cannot load document.</translation>
 请重新执行“站点、线路数据导入”后再试，必要时在游戏中核对线路站点</source>
         <translation>Inconsistent with the game save data: %1
 The save may have changed (routes or stations added/removed/modified), or the station/route data has not been refreshed.
-Please run "Station and Route Data Entry" again, and check the routes and stations in-game if necessary.</translation>
+Please run &quot;Station and Route Data Entry&quot; again, and check the routes and stations in-game if necessary.</translation>
     </message>
     <message>
         <location filename="src/util.cpp" line="968"/>
@@ -234,7 +234,7 @@ Please start the game once to let the bridge mod export the data.</translation>
         <translation>Timetable data generated:
 %1
 
-After entering the game, open the AutoFill window and click "Apply Imported Data to Timetables" to apply it.</translation>
+After entering the game, open the AutoFill window and click &quot;Apply Imported Data to Timetables&quot; to apply it.</translation>
     </message>
 </context>
 <context>
@@ -297,10 +297,12 @@ console command:</translation>
         <location filename="ui/data_add.ui" line="144"/>
         <source>请安装“时刻表自动录入程序辅助工具”mod
 将它应用至存档内并保存至存档。
-mod可在创意工坊内找到，GitHub上也有备份</source>
+mod可在创意工坊内找到，GitHub上也有备份
+三代请安装Timetable AutoFill，请在游戏打开时录入线路和站点</source>
         <translation>Please install the &quot;Timetable AutoFill Program
 Assist Tool&quot; mod, apply it to your save and save it.
-Find it on the Steam Workshop (GitHub also has a backup).</translation>
+Find it on the Steam Workshop (GitHub also has a backup).
+For TPF3, please install &quot;Timetable AutoFill&quot; and import the routes and stations while the game is running.</translation>
     </message>
     <message>
         <location filename="ui/data_add.ui" line="65"/>
@@ -494,7 +496,7 @@ Please enter a character within the range 0-127.</translation>
     <message>
         <location filename="ui/mainui.ui" line="14"/>
         <source>mainui</source>
-        <translation>Transport Fever 2 Timetable Mod AutoFill</translation>
+        <translation>Transport Fever 2/3 Timetable Mod AutoFill V2.0</translation>
     </message>
     <message>
         <location filename="ui/mainui.ui" line="413"/>
@@ -548,8 +550,9 @@ Line Data</translation>
     </message>
     <message>
         <location filename="ui/mainui.ui" line="27"/>
-        <source>狂热运输2 时刻表mod自动录入</source>
-        <translation>Transport Fever 2 Timetable Mod AutoFill</translation>
+        <location filename="src/mainui.cpp" line="872"/>
+        <source>狂热运输2/3 时刻表mod自动录入</source>
+        <translation>Transport Fever 2/3 Timetable Mod AutoFill</translation>
     </message>
     <message>
         <location filename="ui/mainui.ui" line="61"/>
@@ -633,13 +636,13 @@ and import.</translation>
     </message>
     <message>
         <location filename="src/mainui.cpp" line="65"/>
-        <source>狂热运输2 时刻表自动输入</source>
-        <translation>Transport Fever 2 Timetable Mod AutoFill</translation>
+        <source>狂热运输2/3 时刻表自动输入</source>
+        <oldsource>狂热运输2 时刻表自动输入</oldsource>
+        <translation>Transport Fever 2/3 Timetable Mod AutoFill</translation>
     </message>
     <message>
-        <location filename="src/mainui.cpp" line="65"/>
         <source> V1.3</source>
-        <translation> V1.3</translation>
+        <translation type="vanished"> V1.3</translation>
     </message>
     <message>
         <location filename="src/mainui.cpp" line="250"/>
@@ -713,7 +716,7 @@ Format details can be found in the documentation. Each row represents one line. 
     <message>
         <location filename="src/mainui.cpp" line="331"/>
         <source>尚未设置桥接数据目录，请点击右上角“切换到三代”按钮自动检测</source>
-        <translation>The bridge data folder is not set yet. Click the "Switch to TPF3" button in the top-right corner to detect it automatically.</translation>
+        <translation>The bridge data folder is not set yet. Click the &quot;Switch to TPF3&quot; button in the top-right corner to detect it automatically.</translation>
     </message>
     <message>
         <location filename="src/mainui.cpp" line="332"/>
@@ -747,7 +750,7 @@ If it has never appeared, enter the game once first; for now, please select it m
     <message>
         <location filename="src/mainui.cpp" line="540"/>
         <source>&lt;b&gt;注意！请仔细阅读以下内容，三代逻辑与二代差异较大&lt;/b&gt;&lt;ol&gt;&lt;li&gt;如要使用三代，请先在 mod.io 里安装“Timetable AutoFill”模组；建议使用方法：先打开游戏进入存档，然后打开本程序——导入是实时的，不需要像二代一样导入后重新进游戏。&lt;/li&gt;&lt;li&gt;三代无存档文件概念，程序会实时检测当前游戏存档；如更换存档，请加载完后点“刷新”。请确保当前存档与文件夹内数据一致——文件夹内数据名均为 tpf3_timetable_xxx；请确保不同存档使用不同的文件夹。&lt;/li&gt;&lt;li&gt;使用流程：打开游戏存档、打开程序、进行线路和站点的导入（还是和二代一样，不用每次都导入）、数据导入，最后在游戏内 mod 界面点“将导入数据应用至时刻表”即可完成。&lt;/li&gt;&lt;li&gt;如果游戏中途增加了站点或者线路，请按游戏内的“导出存档站点线路信息”按钮，再在程序内重新导入站点线路数据。&lt;/li&gt;&lt;li&gt;没有存档文件，所以没有备份，请务必确认数据正确后再保存你的存档！&lt;/li&gt;&lt;li&gt;三代有全局周期小时数概念，如有小时数据溢出会报错。&lt;/li&gt;&lt;li&gt;如果你有多个 Steam 账号同时玩《狂热运输》并玩时刻表，请自行选择账号（在“路径”栏的“当前steam用户”行切换）。如果只有一个账号，或者只有一个账号玩《狂热运输3》时刻表，那么系统会自动锁定账号，无需手动选择。&lt;/li&gt;&lt;li&gt;如果碰到任何问题，请立刻联系作者。&lt;/li&gt;&lt;/ol&gt;</source>
-        <translation>&lt;b&gt;Attention! Please read the following carefully — TPF3 works quite differently from TPF2.&lt;/b&gt;&lt;ol&gt;&lt;li&gt;To use TPF3, first install the "Timetable AutoFill" mod from mod.io. Recommended workflow: start the game and load a save first, then open this program — the import is real-time, so there is no need to re-enter the game after importing like in TPF2.&lt;/li&gt;&lt;li&gt;TPF3 has no save file concept; the program detects the current in-game save in real time. If you switch saves, click "Refresh" after the save has finished loading. Make sure the current save matches the data in the folder — the working files are named tpf3_timetable_xxx; keep different saves in different folders.&lt;/li&gt;&lt;li&gt;Workflow: load the game save, open the program, import routes and stations (same as TPF2, no need to do this every time), import the data, then click "Apply Imported Data to Timetables" in the in-game mod window to finish.&lt;/li&gt;&lt;li&gt;If stations or routes are added mid-game, click the in-game "Export Save Station/Line Data" button, then re-import the station/route data in the program.&lt;/li&gt;&lt;li&gt;There is no save file, so there is NO backup — please make sure the data is correct before saving your game!&lt;/li&gt;&lt;li&gt;TPF3 has a global cycle (hours) setting; hour overflow will raise an error.&lt;/li&gt;&lt;li&gt;If you play Transport Fever with multiple Steam accounts and use timetables, please select the account manually (switch it in the "Current Steam user" row in the "Path" section). If there is only one account, or only one account plays TPF3 timetables, the account is locked automatically and no manual selection is needed.&lt;/li&gt;&lt;li&gt;If you run into any problems, please contact the author immediately.&lt;/li&gt;&lt;/ol&gt;</translation>
+        <translation>&lt;b&gt;Attention! Please read the following carefully — TPF3 works quite differently from TPF2.&lt;/b&gt;&lt;ol&gt;&lt;li&gt;To use TPF3, first install the &quot;Timetable AutoFill&quot; mod from mod.io. Recommended workflow: start the game and load a save first, then open this program — the import is real-time, so there is no need to re-enter the game after importing like in TPF2.&lt;/li&gt;&lt;li&gt;TPF3 has no save file concept; the program detects the current in-game save in real time. If you switch saves, click &quot;Refresh&quot; after the save has finished loading. Make sure the current save matches the data in the folder — the working files are named tpf3_timetable_xxx; keep different saves in different folders.&lt;/li&gt;&lt;li&gt;Workflow: load the game save, open the program, import routes and stations (same as TPF2, no need to do this every time), import the data, then click &quot;Apply Imported Data to Timetables&quot; in the in-game mod window to finish.&lt;/li&gt;&lt;li&gt;If stations or routes are added mid-game, click the in-game &quot;Export Save Station/Line Data&quot; button, then re-import the station/route data in the program.&lt;/li&gt;&lt;li&gt;There is no save file, so there is NO backup — please make sure the data is correct before saving your game!&lt;/li&gt;&lt;li&gt;TPF3 has a global cycle (hours) setting; hour overflow will raise an error.&lt;/li&gt;&lt;li&gt;If you play Transport Fever with multiple Steam accounts and use timetables, please select the account manually (switch it in the &quot;Current Steam user&quot; row in the &quot;Path&quot; section). If there is only one account, or only one account plays TPF3 timetables, the account is locked automatically and no manual selection is needed.&lt;/li&gt;&lt;li&gt;If you run into any problems, please contact the author immediately.&lt;/li&gt;&lt;/ol&gt;</translation>
     </message>
     <message>
         <location filename="src/mainui.cpp" line="605"/>
@@ -789,7 +792,7 @@ The information shown is from the last export.</translation>
         <location filename="src/mainui.cpp" line="685"/>
         <source>“狂热运输3”模式下请选取桥接数据目录（tpf3_timetable_bridge），通常在：
 C:\Program Files (x86)\Steam\userdata\&lt;你的ID&gt;\3493540\local\tpf3_timetable_bridge</source>
-        <translation>In "Transport Fever 3" mode, select the bridge data folder (tpf3_timetable_bridge), usually located at:
+        <translation>In &quot;Transport Fever 3&quot; mode, select the bridge data folder (tpf3_timetable_bridge), usually located at:
 C:\Program Files (x86)\Steam\userdata\&lt;your ID&gt;\3493540\local\tpf3_timetable_bridge</translation>
     </message>
     <message>
@@ -850,19 +853,15 @@ C:\Program Files (x86)\Steam\userdata\&lt;your ID&gt;\3493540\local\tpf3_timetab
         <translation>Switch back to TPF2</translation>
     </message>
     <message>
-        <location filename="src/mainui.cpp" line="840"/>
-        <source>狂热运输%1 时刻表mod自动录入</source>
-        <translation>Transport Fever %1 Timetable Mod AutoFill</translation>
-    </message>
-    <message>
         <location filename="src/mainui.cpp" line="855"/>
         <source>未读取</source>
         <translation>Not read</translation>
     </message>
     <message>
         <location filename="src/mainui.cpp" line="856"/>
-        <source>当前游戏中存档（三代无存档文件，详情见下）：</source>
-        <translation>Save in current game (no save file in TPF3 — see below):</translation>
+        <source>当前游戏中存档：</source>
+        <oldsource>当前游戏中存档（三代无存档文件，详情见下）：</oldsource>
+        <translation>Save in current game:</translation>
     </message>
     <message>
         <location filename="src/mainui.cpp" line="858"/>
@@ -1062,6 +1061,11 @@ Press Cancel to return.</translation>
         <location filename="src/mainui.cpp" line="1594"/>
         <source>下次不再提示</source>
         <translation>Don&apos;t show again</translation>
+    </message>
+    <message>
+        <location filename="src/mainui.cpp" line="65"/>
+        <source> V2.0</source>
+        <translation> V2.0</translation>
     </message>
     <message>
         <location filename="src/mainui.cpp" line="1041"/>

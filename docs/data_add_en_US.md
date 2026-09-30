@@ -11,7 +11,7 @@ The game's underlying code only recognizes numeric IDs, so you must obtain them 
    - Select either **Overwrite** or **Add only**. **Overwrite** is recommended becasue it is better in auto sorting.
    - *For routes: truncation is supported. See the truncation option for details.*
 
-## TPF3 Mode Notes
+## Transport Fever 3 (TPF3) Special Notes
 
 *   **No need to save the game**: TPF3 has no save file concept; after entering a save, the program detects and reads the data in real time.
 *   **Data source**: TPF3 data comes directly from the game (it is read automatically once when entering a save, but if anything has changed you still need to click synchronize in the external program); if stations or routes are added mid-game, first click the in-game **“Export Save Station/Line Data”** button, then re-import in the program.
