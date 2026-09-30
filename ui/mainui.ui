@@ -15,19 +15,57 @@
   </property>
   <layout class="QVBoxLayout" name="rootLayout">
    <item>
-    <widget class="QLabel" name="label">
-     <property name="font">
-      <font>
-       <pointsize>20</pointsize>
-      </font>
-     </property>
-     <property name="text">
-      <string>狂热运输2 时刻表mod自动录入</string>
-     </property>
-     <property name="alignment">
-      <set>Qt::AlignmentFlag::AlignCenter</set>
-     </property>
-    </widget>
+    <layout class="QHBoxLayout" name="topRow">
+     <item>
+      <widget class="QLabel" name="label">
+       <property name="font">
+        <font>
+         <pointsize>20</pointsize>
+        </font>
+       </property>
+       <property name="text">
+        <string>狂热运输2 时刻表mod自动录入</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignmentFlag::AlignCenter</set>
+       </property>
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="switch_tpf3">
+       <property name="minimumSize">
+        <size>
+         <width>0</width>
+         <height>28</height>
+        </size>
+       </property>
+       <property name="maximumSize">
+        <size>
+         <width>16777215</width>
+         <height>28</height>
+        </size>
+       </property>
+       <property name="font">
+        <font>
+         <pointsize>9</pointsize>
+         <bold>true</bold>
+        </font>
+       </property>
+       <property name="text">
+        <string>切换到三代</string>
+       </property>
+       <property name="styleSheet">
+        <string notr="true">QPushButton { background-color: #2e7d32; color: white; border-radius: 5px; padding: 3px 12px; font-weight: bold; }QPushButton:hover { background-color: #388e3c; }QPushButton:pressed { background-color: #1b5e20; }</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
    </item>
    <item>
     <layout class="QHBoxLayout" name="mainRow" stretch="0,0">
@@ -114,6 +152,23 @@
            <widget class="QPushButton" name="change_sg">
             <property name="text">
              <string>更改存档</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="0">
+           <widget class="QLabel" name="steam_label">
+            <property name="text">
+             <string>当前steam用户（如多账户请手动切换）</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="1">
+           <widget class="QComboBox" name="steam_combo">
+            <property name="maximumSize">
+             <size>
+              <width>240</width>
+              <height>16777215</height>
+             </size>
             </property>
            </widget>
           </item>
@@ -256,6 +311,59 @@
             <item>
              <property name="text">
               <string>时刻表1.3-1.5</string>
+             </property>
+            </item>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLabel" name="cycle_label">
+            <property name="visible">
+             <bool>false</bool>
+            </property>
+            <property name="text">
+             <string>周期（原存档：未读取）</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QComboBox" name="cycle_combo">
+            <property name="visible">
+             <bool>false</bool>
+            </property>
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <item>
+             <property name="text">
+              <string>1 小时</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>2 小时</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>3 小时</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>6 小时</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>12 小时</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>24 小时</string>
              </property>
             </item>
            </widget>

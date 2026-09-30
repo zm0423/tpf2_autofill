@@ -81,12 +81,27 @@ void data_add::on_station_input_clicked()
 
     std::vector<std::pair<std::string, int>> station_dat;
 
-    read_id_data(sdata.sg_dir, station_dat, IDtype::STATION);
+    if(sdata.tpf3())
+    {
+        export_info info;
+        if(!read_export_file(sdata.sg_dir / fs::path("export.lua"), info))
+        {
+            display_info(tr("错误"), tr("未能读取 export.lua，请先启动一次游戏导出数据"));
+            return;
+        }
+        station_dat = info.stations;
+    }
+    else
+    {
+        read_id_data(sdata.sg_dir, station_dat, IDtype::STATION);
+    }
 
 
     if(station_dat.empty())
     {
-        display_info(tr("错误"),tr("未找到存档内站点数据，请检查辅助mod是否安装"));
+        display_info(tr("错误"), sdata.tpf3()
+                     ? tr("export.lua 内站点数据为空，请先启动一次游戏导出数据")
+                     : tr("未找到存档内站点数据，请检查辅助mod是否安装"));
         return;
     }
 
@@ -135,7 +150,7 @@ void data_add::on_station_input_clicked()
 
 
 
-    display_info(tr("提示"),tr("站点数据导入成功，若需更改请查看 存档名_station.xlsx"));
+    display_info(tr("提示"),tr("站点数据导入成功，若需更改请查看 %1").arg(stq(sdata.sg_name + "_station.xlsx")));
 
     return;
 }
@@ -146,11 +161,26 @@ void data_add::on_line_input_clicked()
     readXlsx(sdata.folder_dir / fs::u8path(sdata.sg_name + u8"_line.xlsx"), sdata.line);
     std::vector<std::pair<std::string, int>> line_dat;
 
-    read_id_data(sdata.sg_dir, line_dat, IDtype::LINE);
+    if(sdata.tpf3())
+    {
+        export_info info;
+        if(!read_export_file(sdata.sg_dir / fs::path("export.lua"), info))
+        {
+            display_info(tr("错误"), tr("未能读取 export.lua，请先启动一次游戏导出数据"));
+            return;
+        }
+        line_dat = info.lines;
+    }
+    else
+    {
+        read_id_data(sdata.sg_dir, line_dat, IDtype::LINE);
+    }
 
     if(line_dat.empty())
     {
-        display_info(tr("错误"),tr("未找到存档内线路数据，请检查辅助mod是否安装"));
+        display_info(tr("错误"), sdata.tpf3()
+                     ? tr("export.lua 内线路数据为空，请先启动一次游戏导出数据")
+                     : tr("未找到存档内线路数据，请检查辅助mod是否安装"));
         return;
     }
 
@@ -208,7 +238,7 @@ void data_add::on_line_input_clicked()
     if(!writeVectorToXlsx(sdata.line, sdata.folder_dir / fs::u8path(sdata.sg_name + "_line.xlsx")))
         return;
 
-    display_info(tr("提示"),tr("线路数据导入成功，若需更改请查看 存档名_line.xlsx"));
+    display_info(tr("提示"),tr("线路数据导入成功，若需更改请查看 %1").arg(stq(sdata.sg_name + "_line.xlsx")));
 
     return;
 

@@ -5,11 +5,12 @@
 1.  **Select Root Directory Folder**
     *   This folder is used to store all timetable data and system data.
 
-2.  **Select Game Save File**
+2.  **Select Game Save File (no save file in TPF3 — see details below)**
     *   The default save file path is typically:
         `C:\Program Files (x86)\Steam\userdata\XXXX\1066780\local\save\xxx.lua`
         (Depends on your Steam installation location).
     >   **Tip**: You can also locate it in-game via **Settings → Advanced → Open User Data Folder**.
+    >   **TPF3 Tip**: TPF3 mode does not require selecting a save file; the data folder is detected automatically. See “Transport Fever 3 (TPF3) Mode” below.
 
 3.  **Enter the Game and Obtain Save Information**
     *   Follow the instructions in the **"Station and Route Data Entry"** section to obtain the station and route information for your save.
@@ -50,7 +51,21 @@
 | **xlsx, csv** | Select the format of the import files. **Note**: `csv` only supports UTF-8 encoding (choose this option in the 'Save As' dialog), and sheet names are ignored in List Match Mode. |
 | **Ignore Last Data Row** | When checked, the program will ignore the last row of the data table. |
 | **Timetable Stacking** | **Example**: If a train runs 3 identical round trips within 60 minutes, **enabling** this option stacks the 3 trips into 3 separate timetables; **disabling** it records all 3 trips as one complete line. |
-| **Compatibility Version** | Select the data format matching your installed timetable mod: **"Timetable & Train Diagram, Timetable 1.2"** stores line IDs as string keys, while **"Timetable 1.3-1.5"** uses numeric keys. During import, all line entries in the save will be migrated to the selected key format automatically. **Make sure the choice matches your mod, otherwise the game will fail to load the timetables.** |
+| **Compatibility Version** | Select the data format matching your installed timetable mod: **"Timetable & Train Diagram, Timetable 1.2"** stores line IDs as string keys, while **"Timetable 1.3-1.5"** uses numeric keys. During import, all line entries in the save will be migrated to the selected key format automatically. **Make sure the choice matches your mod, otherwise the game will fail to load the timetables.** (In TPF3 mode this section becomes the “Cycle” hours selector — see below) |
+
+### Transport Fever 3 (TPF3) Mode
+
+Click the **“Switch to TPF3”** button in the top-right corner to switch (the choice is remembered). TPF3 works quite differently from TPF2, so please read the following carefully:
+
+1.  **Install the assist mod**: Subscribe to and enable the **“Timetable AutoFill”** mod from mod.io in the in-game **Mod Hub**.
+2.  **Real-time sync**: We recommend starting the game and loading a save first, then opening this program; the import is **real-time**, so there is no need to re-enter the game after importing like in TPF2.
+3.  **No save file**: TPF3 has no save file (the save row in the app shows **“Save in current game (no save file in TPF3 — see below)”**); the program detects the current in-game save in real time. If you switch saves, click **“Refresh”** after the save has finished loading (Refresh also fetches the current save name and cycle). The TPF3 working files are named `tpf3_timetable_xxx` (station / line / list); **keep different saves in different folders**.
+4.  **Full workflow**: Load the game save → open the program → import routes and stations (same as TPF2, no need to do this every time) → import the data → click **“Apply Imported Data to Timetables”** in the in-game mod window to finish.
+5.  **New stations or routes added mid-game**: First click the in-game **“Export Save Station/Line Data”** button, then re-import the station and route data in the program.
+6.  **No backup**: TPF3 has no save file, so there is no backup; please make sure the data is correct before saving your game!
+7.  **Cycle (hours)**: TPF3 has a global cycle (hours) concept (1/2/3/6/12/24 hours), selected in the “Compatibility Version” section; the hours part of “H:MM:SS” counts into total minutes (offset within the cycle); an hour overflow will raise an error.
+8.  **Multiple accounts**: If you play Transport Fever with multiple Steam accounts and use timetables, please select the account manually (in the **“Current Steam user”** row of the “Path” section); if there is only one account, or only one account plays TPF3 timetables, the account is locked automatically and no manual selection is needed.
+9.  **Problems**: If you run into any problems, please contact the author immediately.
 
 ## Important Notes and Format Requirements
 
@@ -65,12 +80,14 @@
 3.  **Duplicate Data Handling**:
     *   If completely duplicate timetable data is detected, or if the arrival/departure times between two sets of data differ by less than 5 seconds, the program will **automatically merge** these duplicates and prompt you before import.
 
-4.  **Backup and Safety**:
+4.  **Backup and Safety (TPF2)**:
     *   Each import automatically creates a backup of the previous data, stored within the save folder.
     *   **How to Restore**: Locate the backup file, rename it (remove the backup marker), then copy it back to the save folder to overwrite the current file. (Ensure "File name extensions" are visible in your system's folder options before proceeding).
+    *   **TPF3 note**: TPF3 has no save file, so there is no backup; please make sure the data is correct before saving.
 
 5.  **Critical Prerequisite**:
-    *   **Ensure the game is closed or the save file is not loaded when importing timetables.**
+    *   **TPF2**: Ensure the game is closed or the save file is not loaded when importing timetables.
+    *   **TPF3**: Keep the game running with a save loaded (see “Transport Fever 3 (TPF3) Mode” above).
 
 ---
 

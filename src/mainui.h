@@ -4,12 +4,15 @@
 #include <QWidget>
 #include "util.h"
 #include <QButtonGroup>
+#include <QStringList>
 
 
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class mainui; }
 QT_END_NAMESPACE
+
+class QTimer;
 
 class mainui : public QWidget
 {
@@ -25,11 +28,13 @@ public:
 private slots:
     void on_change_dir_clicked(){get_folder();}
 
-    void on_change_sg_clicked(){get_sg();}
+    void on_change_sg_clicked();
 
     void on_input_data_clicked();
 
     void on_sync_all_data_clicked();
+
+    void on_switch_tpf3_clicked();
 
 
     void on_settinginfo_clicked();
@@ -44,6 +49,9 @@ private:
 
     bool get_folder();
     bool get_sg();
+    void ensure_tpf3_dir();
+    void start_bridge_probe(bool silent = false);
+    void poll_bridge_probe();
     void read_station_line();
 
     void refresh();
@@ -67,6 +75,13 @@ private:
     void onLanguageChanged();  // 响应语言管理器信号
 
     my_data sdata;
+
+    QTimer *m_probe_timer{nullptr};
+    QString m_probe_token;
+    int m_probe_left{0};
+    bool m_probe_silent{false};
+
+    QStringList m_steam_items;   // “当前steam用户”下拉缓存
 
 
 

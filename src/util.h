@@ -44,7 +44,19 @@ struct my_data
     bool d_station_add{};
     bool d_line_add{};
     bool d_clear2_warning{true};
-    int d_version{};   // 0=字符串键 1=数字键
+    bool d_tpf3_notice{};   // 三代注意事项：已勾选“下次不再提示”
+    int tpf2_version{};     // 上次的二代子版本（0/1），从三代切回时恢复
+    int d_version{};      // 0=字符串键(TPF2) 1=数字键(TPF2) 2=狂热运输3
+    int cycle_index{};    // TPF3 周期档位 0..5 → 3600/7200/10800/21600/43200/86400
+
+    std::string steam_user;   // TPF3 当前选择的 Steam 账号（userdata 下的账号文件夹名，写入 .dat）
+
+    // TPF3 实时探测结果（“刷新”按钮获取，运行时数据，不写入 .dat）
+    bool probe_ok{};
+    std::string probe_save_id;
+    int probe_cycle_sec{};
+
+    bool tpf3() const { return d_version == 2; }
 };
 
 const std::filesystem::path sys_file_name{"tpf2_autofill.dat"};
@@ -132,6 +144,9 @@ public:
         MULTI_STATION,
         MULTI_LINE,
 
+        TIME_OVER_CYCLE,
+        EXPORT_MISMATCH,
+
     };
 
     explicit errortype(int type, QString q = "");
@@ -185,7 +200,7 @@ TimeComponents parseCSVTime(const std::string& timeStr);
 
 std::vector<CSVData> readCSV(const std::filesystem::path& filePath);
 
-std::pair<int, int> read_xlsx_time(QVariant value);
+std::pair<int, int> read_xlsx_time(QVariant value, bool total_minutes = false);
 
 bool printq(const QString& prefix, const QString& content, const QString& suffix);
 
@@ -197,6 +212,34 @@ enum class IDtype : int{
 void read_id_data(const std::filesystem::path& filePath,
                   std::vector<std::pair<std::string, int>>& data,
                   IDtype type);
+
+
+
+// ========== 狂热运输3（TPF3 桥接）相关 ==========
+
+// export.lua 解析结果（游戏 → 工具）
+struct export_info
+{
+    std::vector<std::pair<std::string, int>> stations;    // 站点名, id
+    std::vector<std::pair<std::string, int>> lines;       // 线路名, id
+    std::unordered_map<int, std::vector<int>> line_stops; // 线路id → 站序(id序列)
+    int cycle_sec{};                                      // 原存档周期（秒），0=未读取
+    std::string save_id;                                  // 存档名（引擎返回，可为空）
+};
+
+bool read_export_file(const std::filesystem::path& file, export_info& out);
+
+int cycle_sec_from_index(int index);
+QString cycle_label_from_sec(int sec);
+
+// 生成 data.lua（工具 → 游戏），内部完成站序校验与周期越界校验
+bool write_data_lua(const my_data& sdata,
+                    const std::vector<std::pair<int, std::vector<stationinfo>>>& data);
+
+// TPF3 实时探测（“刷新”按钮）：工具写 probe.lua，游戏插件回写 probe_result.lua
+bool write_probe_file(const std::filesystem::path& dir, const std::string& token);
+bool read_probe_result(const std::filesystem::path& file, std::string& token,
+                       std::string& save_id, int& cycle_sec);
 
 
 

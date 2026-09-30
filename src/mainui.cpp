@@ -4,6 +4,7 @@
 #include "data_add.h"
 
 #include <Qtimer>
+#include <QDateTime>
 #include <QString>
 #include <QMessageBox>
 #include <QPushButton>
@@ -16,6 +17,9 @@
 #include <QTextEdit>
 #include <QScreen>
 #include <QFontMetrics>
+#include <QSignalBlocker>
+#include <QCheckBox>
+#include <cstdlib>
 
 
 #include "xlsxdocument.h"
@@ -26,6 +30,9 @@
 std::string file_sufix(int i);
 
 namespace fs = std::filesystem;
+
+// TPF3 工作文件基名：<基名>_station.xlsx / _line.xlsx / _list.xlsx
+static const char* const tpf3_work_name = "tpf3_timetable";
 
 
 mainui::mainui(QWidget *parent)
@@ -89,11 +96,48 @@ mainui::mainui(QWidget *parent)
 
     QObject::connect(ui->version_combo, QOverload<int>::of(&QComboBox::currentIndexChanged),
                      this, [&](int p) {
+                         if(p < 0 || p > 1)   // 越界索引（-1）不进状态
+                             return;
                          sdata.d_version = p;
+                         sdata.tpf2_version = p;
+                         refresh_file(sdata);
+                         refresh();
+                     });
+
+    QObject::connect(ui->cycle_combo, QOverload<int>::of(&QComboBox::currentIndexChanged),
+                     this, [&](int p) {
+                         sdata.cycle_index = p;
                          refresh_file(sdata);
                      });
 
+    // “当前steam用户”：手动切换桥接数据目录所在的账号
+    QObject::connect(ui->steam_combo, QOverload<int>::of(&QComboBox::currentIndexChanged),
+                     this, [&](int idx) {
+                         if(!sdata.tpf3() || idx < 0)
+                             return;
+                         const QString path = ui->steam_combo->itemData(idx).toString();
+                         if(path.isEmpty())
+                             return;   // “未检测到”占位项
+                         sdata.steam_user = ui->steam_combo->itemText(idx).toStdString();
+                         sdata.sg_dir = fs::u8path(path.toStdString());
+                         sdata.sg_name = tpf3_work_name;
+                         sdata.sys_save_dir = sdata.sg_dir;
+                         sdata.probe_ok = false;
+                         sdata.probe_save_id.clear();
+                         sdata.probe_cycle_sec = 0;
+                         read_station_line();
+                         refresh_file(sdata);
+                         refresh();
+                     });
+
     QTimer::singleShot(0, this, &mainui::init);
+}
+
+// 旧版数据目录名不再使用：命中时强制重新检测
+static bool is_legacy_bridge_dir(const fs::path& dir)
+{
+    const std::string n = dir.filename().u8string();
+    return n == "autofill_bridge" || n == "tpf3_autofill_bridge";
 }
 
 void mainui::init()
@@ -149,7 +193,25 @@ void mainui::init()
             sdata.d_clear2_warning = std::stoi(buf);
 
         if(getline(sys_file,buf,'\n'))
-            sdata.d_version = std::stoi(buf);
+            sdata.d_version = qBound(0, std::stoi(buf), 2);
+
+        if(getline(sys_file,buf,'\n'))
+            sdata.cycle_index = std::stoi(buf);
+
+        if(getline(sys_file,buf,'\n'))
+            sdata.steam_user = buf;
+
+        if(getline(sys_file,buf,'\n'))
+            sdata.d_tpf3_notice = std::stoi(buf);
+
+        if(getline(sys_file,buf,'\n'))
+            sdata.tpf2_version = qBound(0, std::stoi(buf), 1);
+        if(!sdata.tpf3())
+            sdata.tpf2_version = sdata.d_version;
+
+        // 三代模式先修正工作文件基名，再读站点/线路表（否则会用桥接目录名去读，读不到）
+        if(sdata.tpf3())
+            sdata.sg_name = tpf3_work_name;
 
         read_station_line();
 
@@ -168,7 +230,17 @@ void mainui::init()
 
         ui->pile_if->setChecked(sdata.pile_if);
 
-        ui->version_combo->setCurrentIndex(sdata.d_version);
+        {
+            // 注意：三代时 d_version(=2) 对版本下拉是越界值，必须加信号锁、
+            // 并只把“二代子版本”填进下拉，否则下拉被置空(-1)的信号会污染状态
+            QSignalBlocker block(ui->version_combo);
+            ui->version_combo->setCurrentIndex(sdata.tpf3() ? qBound(0, sdata.tpf2_version, 1)
+                                                            : qBound(0, sdata.d_version, 1));
+        }
+
+        if(sdata.tpf3() && (sdata.sg_dir.empty() || !fs::is_directory(sdata.sg_dir)
+                            || is_legacy_bridge_dir(sdata.sg_dir)))
+            ensure_tpf3_dir();
 
         refresh();
         if(!fs::exists(sdata.folder_dir / fs::u8path(sdata.sg_name + "_list.xlsx")))
@@ -196,6 +268,8 @@ void mainui::init()
             display_info(tr("提示"), std::move(q));
 
         }
+        if(sdata.tpf3())
+            start_bridge_probe(true);   // 启动即为三代模式：自动刷新一次（静默）
         return;
     }
 
@@ -227,6 +301,21 @@ mainui::~mainui()
 }
 
 
+void mainui::on_change_sg_clicked()
+{
+    if(sdata.tpf3())
+    {
+        // “刷新”：确保数据目录可用、重读 export.lua（存档名/周期），
+        // 并向游戏发送一次实时探测；游戏没响应时保留导出文件里的信息
+        ensure_tpf3_dir();
+        refresh();
+        start_bridge_probe();
+        return;
+    }
+    get_sg();
+}
+
+
 void mainui::on_input_data_clicked()
 {
     refresh_file(sdata);
@@ -238,7 +327,9 @@ void mainui::on_input_data_clicked()
     }
     if(sdata.sg_dir.empty())
     {
-        display_info(tr("提示"), tr("请先选取存档"));
+        display_info(tr("提示"), sdata.tpf3()
+                     ? tr("尚未设置桥接数据目录，请点击右上角“切换到三代”按钮自动检测")
+                     : tr("请先选取存档"));
         return;
     }
     read_station_line();
@@ -270,6 +361,12 @@ void mainui::on_sync_all_data_clicked()
         if(!get_data(lists, data))
             return;
 
+        if(sdata.tpf3())
+        {
+            write_data_lua(sdata, data);
+            return;
+        }
+
 
         std::string all_data;
 
@@ -291,6 +388,263 @@ void mainui::on_sync_all_data_clicked()
 
 
 
+// “当前steam用户”的候选：所有存在桥接数据目录的账号
+struct bridge_candidate
+{
+    std::string account;   // userdata 下的账号文件夹名（Steam 账号 ID）
+    fs::path path;         // ...\userdata\<账号>\3493540\local\tpf3_timetable_bridge
+};
+
+static bool same_path(const fs::path& a, const fs::path& b)
+{
+    std::error_code ec;
+    return fs::equivalent(a, b, ec);
+}
+
+// 自动定位“狂热运输3”桥接数据目录（steam userdata/<账号>/3493540/local/tpf3_timetable_bridge）
+static std::vector<bridge_candidate> collect_bridge_candidates()
+{
+    std::vector<bridge_candidate> out;
+    std::vector<fs::path> roots;
+#ifdef _WIN32
+    const char* pf86 = std::getenv("ProgramFiles(x86)");
+    const char* pf = std::getenv("ProgramFiles");
+    if(pf86) roots.push_back(fs::path(pf86) / "Steam" / "userdata");
+    if(pf) roots.push_back(fs::path(pf) / "Steam" / "userdata");
+    roots.push_back(fs::path("C:/Program Files (x86)/Steam/userdata"));
+#else
+    const char* home = std::getenv("HOME");
+    if(home) roots.push_back(fs::path(home) / "Library/Application Support/Steam/userdata");
+#endif
+    for(const auto& root : roots)
+    {
+        std::error_code ec;
+        if(!fs::is_directory(root, ec))
+            continue;
+        for(const auto& entry : fs::directory_iterator(root, ec))
+        {
+            if(ec)
+                break;
+            fs::path cand = entry.path() / "3493540" / "local" / "tpf3_timetable_bridge";
+            std::error_code ec2;
+            if(!fs::is_directory(cand, ec2))
+                continue;
+            bool dup = false;
+            for(const auto& o : out)
+                if(same_path(o.path, cand))
+                {
+                    dup = true;
+                    break;
+                }
+            if(!dup)
+                out.push_back({entry.path().filename().u8string(), cand});
+        }
+    }
+    return out;
+}
+
+// 选择桥接数据目录：优先已保存的账号；否则取 export.lua 最新的（通常=最近玩过的），再否则第一个
+static fs::path choose_bridge_dir(const std::string& preferred, std::string& picked)
+{
+    std::vector<bridge_candidate> cands = collect_bridge_candidates();
+    if(cands.empty())
+        return {};
+
+    if(!preferred.empty())
+        for(const auto& c : cands)
+            if(c.account == preferred)
+            {
+                picked = c.account;
+                return c.path;
+            }
+
+    size_t best = 0;
+    fs::file_time_type bestTime{};
+    bool hasTime = false;
+    for(size_t i = 0; i < cands.size(); ++i)
+    {
+        std::error_code ec;
+        auto t = fs::last_write_time(cands[i].path / fs::path("export.lua"), ec);
+        if(ec)
+            continue;
+        if(!hasTime || t > bestTime)
+        {
+            hasTime = true;
+            bestTime = t;
+            best = i;
+        }
+    }
+    picked = cands[best].account;
+    return cands[best].path;
+}
+
+void mainui::ensure_tpf3_dir()
+{
+    // 已有且有效则保留（旧名目录不再使用，强制重新检测）
+    std::error_code ec;
+    if(!sdata.sg_dir.empty() && fs::is_directory(sdata.sg_dir, ec)
+       && !is_legacy_bridge_dir(sdata.sg_dir))
+    {
+        sdata.sg_name = tpf3_work_name;
+        // 补齐“当前steam用户”（按扫描结果匹配当前目录，仅用于记住选择）
+        for(const auto& c : collect_bridge_candidates())
+            if(c.account != sdata.steam_user && same_path(c.path, sdata.sg_dir))
+            {
+                sdata.steam_user = c.account;
+                refresh_file(sdata);
+                break;
+            }
+        return;
+    }
+
+    // 自动检测：优先上次保存的账号；没有保存则自动挑一个（export.lua 最新的）
+    std::string picked;
+    fs::path detected = choose_bridge_dir(sdata.steam_user, picked);
+    if(!detected.empty())
+    {
+        sdata.sg_dir = detected;
+        sdata.steam_user = picked;
+        sdata.sg_name = tpf3_work_name;
+        sdata.sys_save_dir = detected;
+        sdata.probe_ok = false;
+        sdata.probe_save_id.clear();
+        sdata.probe_cycle_sec = 0;
+        refresh_file(sdata);
+        read_station_line();
+        return;
+    }
+
+    // 自动检测失败：提示后进入手动选择
+    display_info(tr("未找到数据目录"),
+                 tr("未能自动找到桥接数据目录（tpf3_timetable_bridge）。\n如果还没出现过，请先进一次游戏；现在请手动选择。"));
+    get_sg();
+}
+
+void mainui::on_switch_tpf3_clicked()
+{
+    if(sdata.tpf3())
+    {
+        // 切回二代：恢复上次的二代子版本（0/1）
+        sdata.d_version = qBound(0, sdata.tpf2_version, 1);
+        refresh_file(sdata);
+        refresh();
+        return;
+    }
+
+    // 首次切到三代：注意事项（可勾选“下次不再提示”）
+    if(!sdata.d_tpf3_notice)
+    {
+        QMessageBox box(this);
+        box.setWindowTitle(tr("切换到狂热运输3"));
+        box.setTextFormat(Qt::RichText);
+        box.setText(tr(
+            "<b>注意！请仔细阅读以下内容，三代逻辑与二代差异较大</b>"
+            "<ol>"
+            "<li>如要使用三代，请先在 mod.io 里安装“Timetable AutoFill”模组；"
+            "建议使用方法：先打开游戏进入存档，然后打开本程序——导入是实时的，"
+            "不需要像二代一样导入后重新进游戏。</li>"
+            "<li>三代无存档文件概念，程序会实时检测当前游戏存档；如更换存档，"
+            "请加载完后点“刷新”。请确保当前存档与文件夹内数据一致——"
+            "文件夹内数据名均为 tpf3_timetable_xxx；请确保不同存档使用不同的文件夹。</li>"
+            "<li>使用流程：打开游戏存档、打开程序、进行线路和站点的导入（还是和二代一样，不用每次都导入）、"
+            "数据导入，最后在游戏内 mod 界面点“将导入数据应用至时刻表”即可完成。</li>"
+            "<li>如果游戏中途增加了站点或者线路，请按游戏内的“导出存档站点线路信息”按钮，"
+            "再在程序内重新导入站点线路数据。</li>"
+            "<li>没有存档文件，所以没有备份，请务必确认数据正确后再保存你的存档！</li>"
+            "<li>三代有全局周期小时数概念，如有小时数据溢出会报错。</li>"
+            "<li>如果你有多个 Steam 账号同时玩《狂热运输》并玩时刻表，请自行选择账号"
+            "（在“路径”栏的“当前steam用户”行切换）。如果只有一个账号，"
+            "或者只有一个账号玩《狂热运输3》时刻表，那么系统会自动锁定账号，无需手动选择。</li>"
+            "<li>如果碰到任何问题，请立刻联系作者。</li>"
+            "</ol>"));
+        QCheckBox *dontShow = new QCheckBox(tr("下次不再提示"), &box);
+        box.setCheckBox(dontShow);
+        QPushButton *ok = box.addButton(tr("确定"), QMessageBox::AcceptRole);
+        box.setDefaultButton(ok);
+        box.exec();
+        if(dontShow->isChecked())
+        {
+            sdata.d_tpf3_notice = true;
+            refresh_file(sdata);
+        }
+    }
+
+    sdata.d_version = 2;
+    ensure_tpf3_dir();
+    refresh_file(sdata);
+    refresh();
+    start_bridge_probe(true);   // 切到三代后自动刷新一次（静默）
+}
+
+
+void mainui::start_bridge_probe(bool silent)
+{
+    m_probe_silent = silent;
+    if(!sdata.tpf3() || sdata.sg_dir.empty())
+        return;
+    std::error_code ec;
+    if(!fs::is_directory(sdata.sg_dir, ec))
+        return;
+
+    m_probe_token = QString::number(QDateTime::currentMSecsSinceEpoch());
+    if(!write_probe_file(sdata.sg_dir, m_probe_token.toStdString()))
+        return;
+
+    if(!m_probe_timer)
+    {
+        m_probe_timer = new QTimer(this);
+        m_probe_timer->setInterval(250);
+        connect(m_probe_timer, &QTimer::timeout, this, &mainui::poll_bridge_probe);
+    }
+    m_probe_left = 20;   // 20 × 250ms = 5 秒
+    m_probe_timer->start();
+
+    if(!silent)
+    {
+        ui->change_sg->setEnabled(false);
+        ui->change_sg->setText(tr("检测中…"));
+    }
+}
+
+
+void mainui::poll_bridge_probe()
+{
+    if(!sdata.tpf3())
+    {
+        m_probe_timer->stop();
+        ui->change_sg->setEnabled(true);
+        return;
+    }
+
+    std::string token;
+    std::string save_id;
+    int cycle_sec = 0;
+    if(read_probe_result(sdata.sg_dir / fs::path("probe_result.lua"), token, save_id, cycle_sec)
+       && token == m_probe_token.toStdString())
+    {
+        m_probe_timer->stop();
+        sdata.probe_ok = true;
+        sdata.probe_save_id = save_id;
+        sdata.probe_cycle_sec = cycle_sec;
+        refresh();
+        ui->change_sg->setEnabled(true);
+        return;
+    }
+
+    if(--m_probe_left <= 0)
+    {
+        m_probe_timer->stop();
+        ui->change_sg->setEnabled(true);
+        refresh();
+        if(!m_probe_silent)
+            display_info(tr("未检测到游戏"),
+                         tr("已向游戏发送刷新请求，但游戏内没有响应。\n"
+                            "请确认游戏正在运行、已进入存档，并且新版桥接模组已启用。\n"
+                            "当前显示的是上次导出的信息。"));
+    }
+}
+
+
 bool mainui::get_folder()
 {
     display_info(tr("选择目录"), tr("请选取所有数据文件的根目录，即保存所有时刻表文件的目录。随后的车站和线路编号信息也都会存放于此"));
@@ -306,8 +660,13 @@ bool mainui::get_folder()
 
     std::string folder_name = folder.stem().u8string();
 
+    const int keep_version = sdata.d_version;
+    const int keep_cycle = sdata.cycle_index;
+
     sdata = {};
 
+    sdata.d_version = keep_version;
+    sdata.cycle_index = keep_cycle;
     sdata.folder_name = folder_name;
     sdata.folder_dir = folder;
 
@@ -320,6 +679,60 @@ bool mainui::get_folder()
 
 bool mainui::get_sg()
 {
+    if(sdata.tpf3())
+    {
+        display_info(tr("选择数据目录"),
+                     tr("“狂热运输3”模式下请选取桥接数据目录（tpf3_timetable_bridge），通常在：\n"
+                        "C:\\Program Files (x86)\\Steam\\userdata\\<你的ID>\\3493540\\local\\tpf3_timetable_bridge"));
+
+        fs::path dir = fs::u8path((QFileDialog::getExistingDirectory(this,
+            tr("选择目录"),
+            sdata.sg_dir.empty()? "" : QString::fromStdString(sdata.sg_dir.u8string()),
+            QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks)).toStdString());
+
+        if(dir.empty())
+            return 0;
+
+        sdata.sg_dir = dir;
+        sdata.sg_name = tpf3_work_name;
+        sdata.sys_save_dir = dir;
+
+        if(!fs::exists(sdata.folder_dir / fs::u8path(sdata.sg_name + "_list.xlsx")))
+        {
+            QXlsx::Document doc;
+            QXlsx::Format songTi20;
+            songTi20.setFontName(tr("宋体"));
+            songTi20.setFontSize(20);
+
+            doc.currentWorksheet()->setColumnFormat(1, 6, songTi20);
+
+            doc.write(1, 1, tr("线路"));
+            doc.write(1, 2, tr("文件1"));
+            doc.write(1, 3, tr("表单名称"));
+            doc.write(1, 4, tr("文件2"));
+            doc.write(1, 5, tr("表单名称"));
+            doc.write(1, 6, tr("..."));
+
+            doc.saveAs(stq((sdata.folder_dir / fs::u8path(sdata.sg_name + "_list.xlsx")).u8string()));
+
+            QString q = tr("未检测到列表文件，已自动生成") + stq((sdata.folder_dir / fs::u8path(sdata.sg_name + "_list.xlsx")).u8string());
+            q += tr("，如采用列表模式请编辑该文件\n格式见文档，每行一个线路，如有更多文件请向后加。"
+                 "对于文件中的某些表单，请以空格分隔。"
+                 "如果需要一个文件里的所有表单请空置“表单名称”栏目，第一行仅做说明，可随意更改。");
+            display_info(tr("提示"), std::move(q));
+        }
+
+        if(sdata.folder_dir.empty())
+            return 1;
+
+        read_station_line();
+
+        refresh();
+        refresh_file(sdata);
+
+        return 1;
+    }
+
 
     display_info(tr("选择存档lua文件"), tr("选取存档，默认应该为“C:\\Program Files (x86)\\Steam\\user"
                                     "data\\XXXX\\1066780\\local\\save\\xxx.lua”，取决于steam安装位置"));
@@ -393,7 +806,6 @@ void mainui::refresh()
         l->setToolTip(full);
     };
     setPathText(ui->dir_name, sdata.folder_name.empty()? tr("无") : QString::fromStdString(sdata.folder_name));
-    setPathText(ui->savegame_name, sdata.sg_name.empty()? tr("无") : QString::fromStdString(sdata.sg_name));
     ui->station_status->setText(sdata.station.empty()? tr("否"):tr("是"));
     ui->line_status->setText(sdata.line.empty()? tr("否"):tr("是"));
     ui->station_status->setStyleSheet(sdata.station.empty()?
@@ -402,6 +814,113 @@ void mainui::refresh()
     ui->line_status->setStyleSheet(sdata.line.empty()?
         QStringLiteral("color: #c62828; font-weight: bold;") :
         QStringLiteral("color: #2e7d32; font-weight: bold;"));
+
+    // TPF3 模式：存档行保留为纯文本（显示引擎返回的存档名），按钮变“刷新”；
+    // 同步版本下拉、右列大按钮与标题里的代数
+    const bool tpf3 = sdata.tpf3();
+
+    {
+        QSignalBlocker block(ui->version_combo);
+        ui->version_combo->setCurrentIndex(tpf3 ? qBound(0, sdata.tpf2_version, 1)
+                                                : qBound(0, sdata.d_version, 1));
+    }
+    if(tpf3)
+    {
+        ui->switch_tpf3->setText(tr("切换回二代"));
+        ui->switch_tpf3->setStyleSheet(QStringLiteral(
+            "QPushButton { background-color: #546e7a; color: white; border-radius: 5px; padding: 3px 12px; font-weight: bold; }"));
+    }
+    else
+    {
+        ui->switch_tpf3->setText(tr("切换到三代"));
+        ui->switch_tpf3->setStyleSheet(QStringLiteral(
+            "QPushButton { background-color: #2e7d32; color: white; border-radius: 5px; padding: 3px 12px; font-weight: bold; }"));
+    }
+
+    ui->label->setText(tr("狂热运输%1 时刻表mod自动录入").arg(tpf3 ? "3" : "2"));
+
+    export_info bridgeInfo;
+    bool bridgeRead = false;
+    if(tpf3 && !sdata.sg_dir.empty())
+        bridgeRead = read_export_file(sdata.sg_dir / fs::path("export.lua"), bridgeInfo);
+
+    if(tpf3)
+    {
+        // 实时探测（“刷新”按钮）优先，其次 export.lua（自动导出/上次导出）
+        setPathText(ui->savegame_name,
+                    (sdata.probe_ok && !sdata.probe_save_id.empty())
+                        ? stq(sdata.probe_save_id)
+                        : (bridgeRead && !bridgeInfo.save_id.empty())
+                              ? stq(bridgeInfo.save_id)
+                              : tr("未读取"));
+        ui->text2->setText(tr("当前游戏中存档（三代无存档文件，详情见下）："));
+        if(!(m_probe_timer && m_probe_timer->isActive() && !m_probe_silent))
+            ui->change_sg->setText(tr("刷新"));
+        const int cycle_sec = (sdata.probe_ok && sdata.probe_cycle_sec > 0)
+                                  ? sdata.probe_cycle_sec
+                                  : (bridgeRead ? bridgeInfo.cycle_sec : 0);
+        ui->cycle_label->setText(cycle_sec > 0
+            ? tr("原存档：%1").arg(cycle_label_from_sec(cycle_sec))
+            : tr("原存档：未读取"));
+
+        // “当前steam用户”：列出所有存在桥接数据目录的账号（多账号时手动切换）
+        QStringList steamItems;
+        QStringList steamPaths;
+        for(const auto& c : collect_bridge_candidates())
+        {
+            steamItems << stq(c.account);
+            steamPaths << stq(c.path.u8string());
+        }
+        if(steamItems != m_steam_items || ui->steam_combo->count() == 0)
+        {
+            m_steam_items = steamItems;
+            QSignalBlocker block(ui->steam_combo);
+            ui->steam_combo->clear();
+            if(steamItems.isEmpty())
+                ui->steam_combo->addItem(tr("未检测到"), QString());
+            else
+                for(int i = 0; i < steamItems.size(); ++i)
+                    ui->steam_combo->addItem(steamItems[i], steamPaths[i]);
+        }
+        {
+            QSignalBlocker block(ui->steam_combo);
+            int steamIdx = -1;
+            const QString curPath = stq(sdata.sg_dir.u8string());
+            for(int i = 0; i < ui->steam_combo->count(); ++i)
+            {
+                const QString p = ui->steam_combo->itemData(i).toString();
+                if(!p.isEmpty() && p.compare(curPath, Qt::CaseInsensitive) == 0)
+                {
+                    steamIdx = i;
+                    break;
+                }
+            }
+            if(steamIdx < 0 && steamItems.isEmpty())
+                steamIdx = 0;
+            ui->steam_combo->setCurrentIndex(steamIdx);
+        }
+        ui->steam_combo->setEnabled(!steamItems.isEmpty());
+    }
+    else
+    {
+        setPathText(ui->savegame_name, sdata.sg_name.empty()? tr("无") : QString::fromStdString(sdata.sg_name));
+        ui->text2->setText(tr("存档名称："));
+        ui->change_sg->setText(tr("更改存档"));
+    }
+
+    // “当前steam用户”行只在 TPF3 下显示
+    ui->steam_label->setVisible(tpf3);
+    ui->steam_combo->setVisible(tpf3);
+
+    // “兼容版本”栏在 TPF3 下整体变为“周期”（小时数）选项
+    ui->group_version->setTitle(tpf3 ? tr("周期") : tr("兼容版本"));
+    ui->version_combo->setVisible(!tpf3);
+    ui->cycle_label->setVisible(tpf3);
+    ui->cycle_combo->setVisible(tpf3);
+    {
+        QSignalBlocker block(ui->cycle_combo);
+        ui->cycle_combo->setCurrentIndex(sdata.cycle_index);
+    }
 }
 
 
@@ -784,6 +1303,12 @@ bool mainui::get_data(std::vector<std::pair<int, std::vector<std::pair<QString, 
                     a.arrsec = t1.seconds;
                     a.depmin = t2.minutes;
                     a.depsec = t2.seconds;
+                    if(sdata.tpf3())
+                    {
+                        // TPF3 模式下时:分:秒的“时”计入总分钟（周期内偏移）
+                        a.arrmin = t1.hours * 60 + t1.minutes;
+                        a.depmin = t2.hours * 60 + t2.minutes;
+                    }
                     linetime.push_back(a);
                 }
             }
@@ -809,9 +1334,12 @@ bool mainui::get_data(std::vector<std::pair<int, std::vector<std::pair<QString, 
 
                     if(sdata.invalid_if)
                     {
-                        if(doc->read(i+1, 1).isNull() || doc->read(i+1, 1).toString().trimmed().isEmpty() ||
-                           doc->read(i+1, 3).isNull() || doc->read(i+1, 3).toString().trimmed().isEmpty() ||
-                           doc->read(i+1, 4).isNull() || doc->read(i+1, 4).toString().trimmed().isEmpty())
+                        // 末行校验：看下一行的第 2、3 列；都为空说明表格到此结束，
+                        // 当前行（最后一行数据，通常是排图回起点的站）不录入
+                        QVariant n2 = doc->read(i + 1, 2);
+                        QVariant n3 = doc->read(i + 1, 3);
+                        if((n2.isNull() || n2.toString().trimmed().isEmpty()) &&
+                           (n3.isNull() || n3.toString().trimmed().isEmpty()))
                             break;
                     }
                     else if(sta.isNull() || sta.toString().trimmed().isEmpty() ||
@@ -834,8 +1362,8 @@ bool mainui::get_data(std::vector<std::pair<int, std::vector<std::pair<QString, 
 
                     local_stations.push_back(it->second);
 
-                    auto arr = read_xlsx_time(arrtime);
-                    auto dep = read_xlsx_time(deptime);
+                    auto arr = read_xlsx_time(arrtime, sdata.tpf3());
+                    auto dep = read_xlsx_time(deptime, sdata.tpf3());
                     if(arr.first == -1 || dep.first == -1)
                     {
                         errortype e{errortype::TIME_INVALID, sheet.first};
@@ -969,6 +1497,17 @@ bool mainui::get_data(std::vector<std::pair<int, std::vector<std::pair<QString, 
         }
         shrink_index.emplace_back(line.first, ind);
         inde++;
+
+        // 相近/重复的组真的只保留一组（保留第一组），与确认框“保留一组并继续”一致
+        if(s.size() < ind.size())
+        {
+            std::vector<std::vector<arrdeptime>> kept;
+            kept.reserve(s.size());
+            for(size_t i = 0; i < times.size(); ++i)
+                if(static_cast<size_t>(ind[i]) == i)
+                    kept.push_back(std::move(times[i]));
+            times = std::move(kept);
+        }
 
         std::vector<stationinfo> local_station_info;
 
