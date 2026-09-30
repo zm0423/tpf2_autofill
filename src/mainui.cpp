@@ -1054,7 +1054,8 @@ bool mainui::get_data(std::vector<std::pair<int, std::vector<std::pair<QString, 
         msgBox.setDefaultButton(okButton);
         QCheckBox *dontShow = new QCheckBox(tr("下次不再提示"), &msgBox);
         msgBox.setCheckBox(dontShow);
-        if(msgBox.exec() != QMessageBox::Accepted)
+        msgBox.exec();
+        if(msgBox.clickedButton() != okButton)
             return 0;
         if(dontShow->isChecked())
         {
