@@ -10,6 +10,7 @@
 #include <unordered_set>
 #include <chrono>
 #include <iomanip>
+#include <cstdlib>
 
 
 #include <QMessageBox>
@@ -734,7 +735,7 @@ TimeComponents parseCSVTime(const std::string& timeStr) {
     return {-1, -1, -1};
 }
 
-std::pair<int, int> read_xlsx_time(QVariant value)
+std::pair<int, int> read_xlsx_time(QVariant value, bool total_minutes)
 {
     if (value.isNull()) return {-1, -1};
 
@@ -756,6 +757,9 @@ std::pair<int, int> read_xlsx_time(QVariant value)
     }
 
     if (!time.isValid()) return {-1, -1};
+
+    if(total_minutes)
+        return {time.hour() * 60 + time.minute(), time.second()};
 
     return {time.minute(), time.second()};
 
@@ -950,6 +954,16 @@ errortype::errortype(int type, QString q)
             output = QString(QObject::tr("时刻表内的%1线路存在重名").arg(q));
             break;
 
+        case TIME_OVER_CYCLE:
+            output = QString(QObject::tr("时刻表超出所选周期范围：%1").arg(q));
+            break;
+
+        case EXPORT_MISMATCH:
+            output = QString(QObject::tr("与游戏存档数据不一致：%1\n"
+                                         "可能存档已变动（增删或改动了线路、站点），或站点、线路数据未刷新。\n"
+                                         "请重新执行“站点、线路数据导入”后再试，必要时在游戏中核对线路站点").arg(q));
+            break;
+
         default:
             output = QObject::tr("其他");
             break;
@@ -977,6 +991,10 @@ void refresh_file(const my_data &sdata)
     file << sdata.d_line_add << '\n';
     file << sdata.d_clear2_warning << '\n';
     file << sdata.d_version << '\n';
+    file << sdata.cycle_index << '\n';
+    file << sdata.steam_user << '\n';
+    file << sdata.d_tpf3_notice << '\n';
+    file << sdata.tpf2_version << '\n';
 
     file.close();
 }
@@ -1044,5 +1062,373 @@ void read_id_data(const std::filesystem::path& filePath,
 
 
     file.close();
+}
+
+
+// ========== 狂热运输3（TPF3 桥接） ==========
+
+int cycle_sec_from_index(int index)
+{
+    static const int presets[6] = {3600, 7200, 10800, 21600, 43200, 86400};
+    if(index < 0 || index > 5)
+        return presets[0];
+    return presets[index];
+}
+
+QString cycle_label_from_sec(int sec)
+{
+    if(sec <= 0)
+        return QString();
+    return QObject::tr("%1 小时").arg(sec / 3600);
+}
+
+bool read_export_file(const std::filesystem::path& file, export_info& out)
+{
+    out = {};
+
+    std::ifstream in(file, std::ios::binary);
+    if(!in)
+        return false;
+
+    enum class Sec { NONE, STATIONS, LINES, LINE_STOPS };
+    Sec sec = Sec::NONE;
+
+    std::string line;
+    while(std::getline(in, line))
+    {
+        if(line.find("lineStops = {") != std::string::npos)
+        {
+            sec = Sec::LINE_STOPS;
+            continue;
+        }
+        if(line.find("stations = {") != std::string::npos)
+        {
+            sec = Sec::STATIONS;
+            continue;
+        }
+        if(line.find("lines = {") != std::string::npos)
+        {
+            sec = Sec::LINES;
+            continue;
+        }
+        if(sec == Sec::NONE && line.find("cycleSec") != std::string::npos)
+        {
+            size_t eq = line.find('=');
+            if(eq != std::string::npos)
+                out.cycle_sec = std::atoi(line.substr(eq + 1).c_str());
+            continue;
+        }
+        if(sec == Sec::NONE && line.find("saveId") != std::string::npos)
+        {
+            size_t q1 = line.find('"');
+            if(q1 != std::string::npos)
+            {
+                std::string value;
+                for(size_t p = q1 + 1; p < line.size(); ++p)
+                {
+                    if(line[p] == '\\' && p + 1 < line.size())
+                    {
+                        value += line[p + 1];
+                        ++p;
+                        continue;
+                    }
+                    if(line[p] == '"')
+                        break;
+                    value += line[p];
+                }
+                out.save_id = value;
+            }
+            continue;
+        }
+        if(line.find('}') != std::string::npos)
+        {
+            sec = Sec::NONE;
+            continue;
+        }
+        if(sec == Sec::NONE)
+            continue;
+
+        // 条目格式：["12345"] = "名称",（线路站序为 "id1,id2,..."）
+        size_t lb = line.find('[');
+        if(lb == std::string::npos)
+            continue;
+        size_t rb = line.find(']', lb);
+        if(rb == std::string::npos)
+            continue;
+        size_t eq = line.find('=', rb);
+        if(eq == std::string::npos)
+            continue;
+
+        std::string idStr = line.substr(lb + 1, rb - lb - 1);
+        idStr.erase(std::remove(idStr.begin(), idStr.end(), '"'), idStr.end());
+        idStr.erase(std::remove(idStr.begin(), idStr.end(), ' '), idStr.end());
+        if(idStr.empty())
+            continue;
+        int id = std::atoi(idStr.c_str());
+
+        size_t q1 = line.find('"', eq);
+        if(q1 == std::string::npos)
+            continue;
+
+        std::string value;
+        for(size_t p = q1 + 1; p < line.size(); ++p)
+        {
+            if(line[p] == '\\' && p + 1 < line.size())
+            {
+                value += line[p + 1];
+                ++p;
+                continue;
+            }
+            if(line[p] == '"')
+                break;
+            value += line[p];
+        }
+
+        if(sec == Sec::STATIONS)
+            out.stations.push_back({value, id});
+        else if(sec == Sec::LINES)
+            out.lines.push_back({value, id});
+        else if(sec == Sec::LINE_STOPS)
+        {
+            std::vector<int> stops;
+            std::stringstream ss(value);
+            std::string tok;
+            while(std::getline(ss, tok, ','))
+                if(!tok.empty())
+                    stops.push_back(std::atoi(tok.c_str()));
+            out.line_stops[id] = std::move(stops);
+        }
+    }
+
+    return true;
+}
+
+namespace
+{
+    std::string lua_escape(const std::string& s)
+    {
+        std::string o;
+        o.reserve(s.size() + 8);
+        for(char c : s)
+        {
+            switch(c)
+            {
+            case '\\': o += "\\\\"; break;
+            case '"':  o += "\\\""; break;
+            case '\n': o += "\\n";  break;
+            case '\r': o += "\\r";  break;
+            default:   o += c;      break;
+            }
+        }
+        return o;
+    }
+
+    // arrmin/arrsec → "H:MM:SS"（TPF3 下 arrmin 为周期内总分钟）
+    QString fmt_cycle_time(int min, int sec)
+    {
+        return QString("%1:%2:%3")
+            .arg(min / 60)
+            .arg(min % 60, 2, 10, QChar('0'))
+            .arg(sec, 2, 10, QChar('0'));
+    }
+}
+
+bool write_probe_file(const std::filesystem::path& dir, const std::string& token)
+{
+    std::ofstream out(dir / fs::path("probe.lua"), std::ios::binary | std::ios::trunc);
+    if(!out)
+        return false;
+    out << "function data()\nreturn {\n\ttoken = \"" << lua_escape(token) << "\",\n}\nend\n";
+    out.close();
+    return true;
+}
+
+bool read_probe_result(const std::filesystem::path& file, std::string& token,
+                       std::string& save_id, int& cycle_sec)
+{
+    token.clear();
+    save_id.clear();
+    cycle_sec = 0;
+
+    std::ifstream in(file, std::ios::binary);
+    if(!in)
+        return false;
+
+    auto read_quoted = [](const std::string& line, std::string& value) {
+        size_t q1 = line.find('"');
+        if(q1 == std::string::npos)
+            return;
+        for(size_t p = q1 + 1; p < line.size(); ++p)
+        {
+            if(line[p] == '\\' && p + 1 < line.size())
+            {
+                value += line[p + 1];
+                ++p;
+                continue;
+            }
+            if(line[p] == '"')
+                break;
+            value += line[p];
+        }
+    };
+
+    std::string line;
+    while(std::getline(in, line))
+    {
+        size_t eq = line.find('=');
+        if(eq == std::string::npos)
+            continue;
+        if(line.find("token") != std::string::npos)
+            read_quoted(line, token);
+        else if(line.find("saveId") != std::string::npos)
+            read_quoted(line, save_id);
+        else if(line.find("cycleSec") != std::string::npos)
+            cycle_sec = std::atoi(line.substr(eq + 1).c_str());
+    }
+    return !token.empty();
+}
+
+bool write_data_lua(const my_data& sdata,
+                    const std::vector<std::pair<int, std::vector<stationinfo>>>& data)
+{
+    const fs::path exportFile = sdata.sg_dir / fs::path("export.lua");
+
+    export_info info;
+    if(!read_export_file(exportFile, info))
+    {
+        display_info(QObject::tr("错误"),
+                     QObject::tr("未能读取游戏数据文件 %1\n请先启动一次游戏，让桥接 mod 导出数据").arg(stq(exportFile.u8string())));
+        return false;
+    }
+
+    const int cycleSec = cycle_sec_from_index(sdata.cycle_index);
+
+    // 线路全名：以 export.lua 里的游戏内名称为准（截断等操作只影响 CSV 匹配，
+    // 不能影响写入 data.lua 的名字，否则桥接按名匹配会失败）
+    std::unordered_map<int, std::string> nameById;
+    for(const auto& p : info.lines)
+        nameById[p.second] = p.first;
+    auto fullLineName = [&](int id) -> QString {
+        auto it = nameById.find(id);
+        if(it != nameById.end())
+            return stq(it->second);
+        return get_linename(sdata.line, id);
+    };
+
+    // 站序校验 + 周期越界校验
+    for(const auto& linePair : data)
+    {
+        const int lineid = linePair.first;
+        const auto& stations = linePair.second;
+
+        auto it = info.line_stops.find(lineid);
+        if(it == info.line_stops.end())
+        {
+            errortype e{errortype::EXPORT_MISMATCH,
+                        QObject::tr("线路%1 在存档中不存在").arg(fullLineName(lineid))};
+            return false;
+        }
+        if(it->second.size() != stations.size())
+        {
+            errortype e{errortype::EXPORT_MISMATCH,
+                        QObject::tr("线路%1 的站序与存档不一致").arg(fullLineName(lineid))};
+            return false;
+        }
+        for(size_t i = 0; i < stations.size(); ++i)
+            if(stations[i].stationid != it->second[i])
+            {
+                errortype e{errortype::EXPORT_MISMATCH,
+                            QObject::tr("线路%1 的站序与存档不一致").arg(fullLineName(lineid))};
+                return false;
+            }
+
+        for(const auto& st : stations)
+            for(const auto& t : st.arrdep)
+            {
+                bool badArr = t.arrmin < 0 || t.arrsec < 0 || t.arrmin * 60 + t.arrsec >= cycleSec;
+                bool badDep = t.depmin < 0 || t.depsec < 0 || t.depmin * 60 + t.depsec >= cycleSec;
+
+                if(badArr || badDep)
+                {
+                    std::string station_name;
+                    for(const auto& p : sdata.station)
+                        if(p.second == st.stationid)
+                        {
+                            station_name = p.first;
+                            break;
+                        }
+
+                    QString which = badDep
+                        ? QObject::tr("出发 %1").arg(fmt_cycle_time(t.depmin, t.depsec))
+                        : QObject::tr("到达 %1").arg(fmt_cycle_time(t.arrmin, t.arrsec));
+
+                    errortype e{errortype::TIME_OVER_CYCLE,
+                                QObject::tr("线路%1 站点%2（%3，周期上限 %4）")
+                                    .arg(fullLineName(lineid))
+                                    .arg(stq(station_name))
+                                    .arg(which)
+                                    .arg(cycle_label_from_sec(cycleSec))};
+                    return false;
+                }
+            }
+    }
+
+    // 生成 data.lua
+    const auto nowMs = std::chrono::duration_cast<std::chrono::milliseconds>(
+                           std::chrono::system_clock::now().time_since_epoch())
+                           .count();
+
+    std::ostringstream oss;
+    oss << "function data()\nreturn {\n";
+    oss << "\trevision = " << nowMs << ",\n";
+    oss << "\tforce = false,\n";
+    oss << "\tcycleSec = " << cycleSec << ",\n";
+    if(sdata.clear_if == 3)
+    {
+        oss << "\tclearAll = true,\n";
+    }
+    else if(sdata.clear_if == 2)
+    {
+        oss << "\tclearLines = {\n";
+        for(const auto& p : sdata.line)
+            oss << "\t\t\"" << lua_escape(fullLineName(p.second).toUtf8().toStdString()) << "\",\n";
+        oss << "\t},\n";
+    }
+    oss << "\tlines = {\n";
+    for(const auto& linePair : data)
+    {
+        const int lineid = linePair.first;
+        const auto& stations = linePair.second;
+
+        oss << "\t\t{\n";
+        oss << "\t\t\tname = \"" << lua_escape(fullLineName(lineid).toUtf8().toStdString()) << "\",\n";
+        oss << "\t\t\tstops = {\n";
+        for(size_t i = 0; i < stations.size(); ++i)
+        {
+            oss << "\t\t\t\t{ index = " << (i + 1) << ", slots = {\n";
+            for(const auto& t : stations[i].arrdep)
+                oss << "\t\t\t\t\t{ arrMin = " << t.arrmin << ", arrSec = " << t.arrsec
+                    << ", depMin = " << t.depmin << ", depSec = " << t.depsec << " },\n";
+            oss << "\t\t\t\t} },\n";
+        }
+        oss << "\t\t\t},\n";
+        oss << "\t\t},\n";
+    }
+    oss << "\t},\n}\nend\n";
+
+    const fs::path outFile = sdata.sg_dir / fs::path("data.lua");
+    std::ofstream out(outFile, std::ios::binary | std::ios::trunc);
+    if(!out)
+    {
+        errortype{errortype::SAVE_FILE_UNSAVE};
+        return false;
+    }
+    out << oss.str();
+    out.close();
+
+    display_info(QObject::tr("成功"),
+                 QObject::tr("时刻表数据已生成：\n%1\n\n进入游戏后打开 AutoFill 窗口，点击“将导入数据应用至时刻表”即可生效。")
+                     .arg(stq(outFile.u8string())));
+    return true;
 }
 
