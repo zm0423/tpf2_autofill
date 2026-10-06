@@ -64,6 +64,12 @@ const std::filesystem::path sys_file_name{"tpf2_autofill.dat"};
 
 void refresh_file(const my_data &sdata);
 
+// 在文件夹里寻找二代存档（xxx.lua）：优先与 preferName 同名；
+// 否则取唯一一个带 <名>_station/_line 配套文件的 .lua；再否则唯一一个 .lua。
+bool find_tpf2_save(const std::filesystem::path& folder,
+                    const std::string& preferName,
+                    std::filesystem::path& outPath);
+
 
 inline QString get_linename(const std::vector<std::pair<std::string, int>>& line, int lineid)
 {
