@@ -353,6 +353,52 @@ static int entryCount(const QByteArray& raw)
     while(find_next_entry(t, scan, e, lid, es, bs, be, q)) { ++n; scan = be + 1; }
     return n;
 }
+// 统计被清空成空表的条目（无 hasTimetable / stations 字段）
+static int countEmptiedEntries(const QByteArray& raw)
+{
+    std::string t(raw.constData(), raw.size());
+    size_t s, e;
+    if(!sectionRange(raw, s, e)) return -1;
+    size_t b = t.find('{', s);
+    size_t scan = b + 1;
+    int lid; size_t es, bs, be; bool q;
+    int n = 0;
+    while(find_next_entry(t, scan, e, lid, es, bs, be, q))
+    {
+        std::string body = t.substr(es, be - es + 1);
+        if(body.find("hasTimetable") == std::string::npos &&
+           body.find("stations") == std::string::npos)
+            ++n;
+        scan = be + 1;
+    }
+    return n;
+}
+// 从存档文件中删掉某条线路的整块条目（用于制造“该线路在存档中不存在”的场景）
+static bool eraseEntry(const QString& path, int id)
+{
+    QByteArray raw = rd(path);
+    std::string t(raw.constData(), raw.size());
+    size_t s, e;
+    if(!sectionRange(raw, s, e)) return false;
+    size_t b = t.find('{', s);
+    size_t scan = b + 1;
+    int lid; size_t es, bs, be; bool q;
+    while(find_next_entry(t, scan, e, lid, es, bs, be, q))
+    {
+        if(lid == id)
+        {
+            size_t end = be + 1;                        // '}' 之后
+            if(end < t.size() && t[end] == ',') ++end;  // 逗号
+            if(end < t.size() && t[end] == '\n') ++end;
+            size_t start = es;
+            while(start > 0 && t[start - 1] != '\n') --start;   // 行首
+            t.erase(start, end - start);
+            return wr(path, QByteArray::fromStdString(t));
+        }
+        scan = be + 1;
+    }
+    return false;
+}
 static int csvRowCount(const QString& p)
 {
     int n = 0;
@@ -704,7 +750,7 @@ int main(int argc, char** argv)
         std::string e3 = entryOf(after, 3, f3);
         r.ck(f1 && f2 && f3, "entries exist");
         r.ck(strHas(e1, "hasTimetable = true") && strHas(e1, "custom = \"keep1\""), "entry1 re-imported + custom kept");
-        r.ck(!strHas(e2, "frequency") && !strHas(e2, "hasTimetable"), "entry2 managed fields cleared");
+        r.ck(!strHas(e2, "frequency") && strHas(e2, "hasTimetable = false") && strHas(e2, "stations = { }"), "entry2 cleared with empty-timetable marker");
         r.ck(strHas(e2, "other = \"keep2\""), "entry2 other kept");
         std::string e3b = entryOf(before, 3, f3);
         r.ck(e3 == e3b, "entry3 untouched");
@@ -732,8 +778,8 @@ int main(int argc, char** argv)
         std::string e3 = entryOf(after, 3, f3);
         r.ck(f1 && f2 && f3, "entries exist");
         r.ck(strHas(e1, "hasTimetable = true"), "entry1 re-imported");
-        r.ck(!strHas(e2, "frequency") && !strHas(e2, "hasTimetable") && !strHas(e2, "stations"), "entry2 fully cleared");
-        r.ck(!strHas(e3, "frequency") && !strHas(e3, "hasTimetable") && !strHas(e3, "stations"), "entry3 fully cleared");
+        r.ck(!strHas(e2, "frequency") && strHas(e2, "hasTimetable = false") && strHas(e2, "stations = { }"), "entry2 cleared with marker");
+        r.ck(!strHas(e3, "frequency") && strHas(e3, "hasTimetable = false") && strHas(e3, "stations = { }"), "entry3 cleared with marker");
         r.ck(strHas(e2, "other = \"keep2\""), "entry2 other kept");
     });
 
@@ -1090,6 +1136,370 @@ int main(int argc, char** argv)
         r.ck(entryCount(after) == beforeEntries, "entry count unchanged");
         size_t s1, e1, s2, e2;
         sectionRange(rd(dir + "/shanghai1.sav.lua"), s1, e1);   // 注意：读的是修改后的文件，仅做段定位用
+    });
+
+    // 列表模式 + 清空（用户反馈的场景）
+    runCase("R7_real_list_clear2", [&](CR& r) {
+        QString dir = newCaseDir("R7_real_list_clear2");
+        if(!cpDir(g_realSrc, dir)) { r.ck(false, "copy real src"); return; }
+        QDir::setCurrent(dir);
+        mainui w;
+        baseSetup(w, dir, "shanghai1.sav", dir + "/shanghai1.sav.lua", 0);
+        int beforeEntries = entryCount(rd(dir + "/shanghai1.sav.lua"));
+        w.sdata.easy_if = false;
+        w.sdata.xls_if = true;
+        w.sdata.clear_if = 2;   // 清空line并导入
+        QMetaObject::invokeMethod(&w, "on_sync_all_data_clicked");
+        r.ck(hasDialog(QString::fromUtf8("时刻表已成功导入")), "success dialog");
+        QByteArray after = rd(dir + "/shanghai1.sav.lua");
+        r.nt(QString("entry count %1 -> %2").arg(beforeEntries).arg(entryCount(after)));
+        r.ck(entryCount(after) == beforeEntries, "entry count unchanged");
+        int emptied = countEmptiedEntries(after);
+        r.nt(QString("emptied entries: %1 (list covers all save lines)").arg(emptied));
+        r.ck(emptied == 0, "no emptied entries");
+        // 二次导入：确认生成的文件仍可被正常识别/处理
+        QMetaObject::invokeMethod(&w, "on_sync_all_data_clicked");
+        r.ck(hasDialog(QString::fromUtf8("时刻表已成功导入")), "second run success dialog");
+        QByteArray again = rd(dir + "/shanghai1.sav.lua");
+        r.ck(again == after, "second run byte-identical (idempotent)");
+    });
+
+    runCase("R8_real_list_clear3", [&](CR& r) {
+        QString dir = newCaseDir("R8_real_list_clear3");
+        if(!cpDir(g_realSrc, dir)) { r.ck(false, "copy real src"); return; }
+        QDir::setCurrent(dir);
+        mainui w;
+        baseSetup(w, dir, "shanghai1.sav", dir + "/shanghai1.sav.lua", 0);
+        int beforeEntries = entryCount(rd(dir + "/shanghai1.sav.lua"));
+        w.sdata.easy_if = false;
+        w.sdata.xls_if = true;
+        w.sdata.clear_if = 3;   // 全部清空后导入
+        QMetaObject::invokeMethod(&w, "on_sync_all_data_clicked");
+        r.ck(hasDialog(QString::fromUtf8("时刻表已成功导入")), "success dialog");
+        QByteArray after = rd(dir + "/shanghai1.sav.lua");
+        r.nt(QString("entry count %1 -> %2").arg(beforeEntries).arg(entryCount(after)));
+        r.ck(entryCount(after) == beforeEntries, "entry count unchanged");
+        int emptied = countEmptiedEntries(after);
+        r.nt(QString("emptied entries: %1 (list covers all save lines)").arg(emptied));
+        r.ck(emptied == 0, "no emptied entries");
+        QMetaObject::invokeMethod(&w, "on_sync_all_data_clicked");
+        r.ck(hasDialog(QString::fromUtf8("时刻表已成功导入")), "second run success dialog");
+        QByteArray again = rd(dir + "/shanghai1.sav.lua");
+        r.ck(again == after, "second run byte-identical (idempotent)");
+    });
+
+    // 列表只覆盖部分线路 + 清空line：其余线路会被清成空条目
+    runCase("R9_real_list_subset_clear2", [&](CR& r) {
+        QString dir = newCaseDir("R9_real_list_subset_clear2");
+        if(!cpDir(g_realSrc, dir)) { r.ck(false, "copy real src"); return; }
+        QDir::setCurrent(dir);
+        writeListXlsx(dir + "/shanghai1.sav_list.xlsx", {
+            {QStringLiteral("1461"), QStringLiteral("时刻表.xlsx"), QStringLiteral("1461")},
+            {QStringLiteral("1463"), QStringLiteral("时刻表.xlsx"), QStringLiteral("1463")},
+            {QStringLiteral("K351"), QStringLiteral("时刻表.xlsx"), QStringLiteral("K351")},
+            {QStringLiteral("Z1"), QStringLiteral("时刻表.xlsx"), QStringLiteral("Z1")},
+        });
+        mainui w;
+        baseSetup(w, dir, "shanghai1.sav", dir + "/shanghai1.sav.lua", 0);
+        w.sdata.easy_if = false;
+        w.sdata.xls_if = true;
+        w.sdata.clear_if = 2;
+        QMetaObject::invokeMethod(&w, "on_sync_all_data_clicked");
+        r.ck(hasDialog(QString::fromUtf8("时刻表已成功导入")), "success dialog");
+        QByteArray after = rd(dir + "/shanghai1.sav.lua");
+        r.nt(QString("entry count %1, emptied %2").arg(entryCount(after)).arg(countEmptiedEntries(after)));
+        bool f = false;
+        std::string t1 = entryOf(after, 271862, f);   // T1：不在列表 → 预期被清空
+        r.nt("T1(cleared) entry: " + QString::fromStdString(t1).left(160).replace("\n", "\\n"));
+        r.ck(countEmptiedEntries(after) == 0, "no bare-empty entries (empty-timetable marker written)");
+        r.ck(strHas(t1, "hasTimetable = false") && strHas(t1, "stations = { }"), "T1 cleared with empty-timetable marker");
+        std::string k = entryOf(after, 348499, f);    // K351：在列表 → 应有数据
+        r.ck(f && k.find("stationID") != std::string::npos, "listed line K351 keeps stations");
+        std::string z = entryOf(after, 279234, f);    // Z1：在列表 → 应有数据
+        r.ck(f && z.find("stationID") != std::string::npos, "listed line Z1 keeps stations");
+    });
+
+    // 存档中缺少某条线路的条目 + 列表包含它 → 走“新条目插入”分支
+    runCase("R10_real_list_insert_missing", [&](CR& r) {
+        QString dir = newCaseDir("R10_real_list_insert_missing");
+        if(!cpDir(g_realSrc, dir)) { r.ck(false, "copy real src"); return; }
+        QDir::setCurrent(dir);
+        r.ck(entryCount(rd(dir + "/shanghai1.sav.lua")) == 24, "pre: 24 entries");
+        r.ck(eraseEntry(dir + "/shanghai1.sav.lua", 279234), "erase Z1 entry");
+        r.ck(entryCount(rd(dir + "/shanghai1.sav.lua")) == 23, "after erase: 23 entries");
+        mainui w;
+        baseSetup(w, dir, "shanghai1.sav", dir + "/shanghai1.sav.lua", 0);
+        w.sdata.easy_if = false;
+        w.sdata.xls_if = true;
+        w.sdata.clear_if = 2;
+        QMetaObject::invokeMethod(&w, "on_sync_all_data_clicked");
+        r.ck(hasDialog(QString::fromUtf8("时刻表已成功导入")), "success dialog");
+        QByteArray after = rd(dir + "/shanghai1.sav.lua");
+        r.nt(QString("entry count after insert: %1").arg(entryCount(after)));
+        r.ck(entryCount(after) == 24, "Z1 re-inserted (24 entries)");
+        bool f = false;
+        std::string z = entryOf(after, 279234, f);
+        r.ck(f && z.find("stationID") != std::string::npos, "Z1 entry has stations");
+        r.nt("inserted Z1 entry: " + QString::fromStdString(z).left(240).replace("\n", "\\n"));
+        QMetaObject::invokeMethod(&w, "on_sync_all_data_clicked");
+        r.ck(hasDialog(QString::fromUtf8("时刻表已成功导入")), "second run success");
+    });
+
+    // 数字键（d_version=1）+ 列表模式 + 清空
+    runCase("R11_real_list_clear2_numeric", [&](CR& r) {
+        QString dir = newCaseDir("R11_real_list_clear2_numeric");
+        if(!cpDir(g_realSrc, dir)) { r.ck(false, "copy real src"); return; }
+        QDir::setCurrent(dir);
+        mainui w;
+        baseSetup(w, dir, "shanghai1.sav", dir + "/shanghai1.sav.lua", 1);
+        int beforeEntries = entryCount(rd(dir + "/shanghai1.sav.lua"));
+        w.sdata.easy_if = false;
+        w.sdata.xls_if = true;
+        w.sdata.clear_if = 2;
+        QMetaObject::invokeMethod(&w, "on_sync_all_data_clicked");
+        r.ck(hasDialog(QString::fromUtf8("时刻表已成功导入")), "success dialog");
+        QByteArray after = rd(dir + "/shanghai1.sav.lua");
+        size_t s, e;
+        if(sectionRange(after, s, e))
+        {
+            QByteArray sect = after.mid((int)s, (int)(e - s));
+            r.ck(!sect.contains("[\""), "no quoted keys left in section");
+        }
+        r.nt(QString("entry count %1 -> %2, emptied %3").arg(beforeEntries).arg(entryCount(after)).arg(countEmptiedEntries(after)));
+        r.ck(entryCount(after) == beforeEntries, "entry count unchanged");
+    });
+
+    // 列表模式 + CSV + 清空
+    runCase("R12_real_list_csv_clear2", [&](CR& r) {
+        QString dir = newCaseDir("R12_real_list_csv_clear2");
+        if(!cpDir(g_realSrc, dir)) { r.ck(false, "copy real src"); return; }
+        QDir::setCurrent(dir);
+        std::vector<std::array<QString, 3>> rows;
+        for(const char* nm : {"1461", "1463", "K351", "Z1"})
+            rows.push_back({QString::fromUtf8(nm), QString::fromUtf8(nm) + ".csv", QString()});
+        writeListXlsx(dir + "/shanghai1.sav_list.xlsx", rows);
+        mainui w;
+        baseSetup(w, dir, "shanghai1.sav", dir + "/shanghai1.sav.lua", 0);
+        w.sdata.easy_if = false;
+        w.sdata.xls_if = false;   // CSV
+        w.sdata.clear_if = 2;
+        QMetaObject::invokeMethod(&w, "on_sync_all_data_clicked");
+        r.ck(hasDialog(QString::fromUtf8("时刻表已成功导入")), "success dialog");
+        QByteArray after = rd(dir + "/shanghai1.sav.lua");
+        r.nt(QString("entry count %1, emptied %2").arg(entryCount(after)).arg(countEmptiedEntries(after)));
+        bool f = false;
+        std::string k = entryOf(after, 348499, f);
+        r.ck(f && k.find("stationID") != std::string::npos, "listed K351 has stations");
+    });
+
+    // ============ 调试：上海-普速2 列表/简单模式（用户反馈复现） ============
+    const QString LS2 = QStringLiteral("C:/Users/zm/AppData/Local/Temp/opencode/real_src_ls2_1006");
+    runCase("S1_ls2_list_xlsx", [&](CR& r) {
+        QString dir = newCaseDir("S1_ls2_list_xlsx");
+        if(!QDir(LS2).exists()) { r.nt("LS2 source not present, skipped"); return; }
+        if(!cpDir(LS2, dir)) { r.ck(false, "copy ls2 src"); return; }
+        QDir::setCurrent(dir);
+        mainui w;
+        baseSetup(w, dir, "shanghai1.sav", dir + "/shanghai1.sav.lua", 0);
+        w.sdata.easy_if = false;
+        w.sdata.xls_if = true;
+        QMetaObject::invokeMethod(&w, "on_sync_all_data_clicked");
+        r.nt(QString("dialogs=%1 success=%2").arg(g_dialogs.size()).arg(hasDialog(QString::fromUtf8("时刻表已成功导入"))));
+    });
+    runCase("S2_ls2_easy_csv", [&](CR& r) {
+        QString dir = newCaseDir("S2_ls2_easy_csv");
+        if(!QDir(LS2).exists()) { r.nt("LS2 source not present, skipped"); return; }
+        if(!cpDir(LS2, dir)) { r.ck(false, "copy ls2 src"); return; }
+        QDir::setCurrent(dir);
+        mainui w;
+        baseSetup(w, dir, "shanghai1.sav", dir + "/shanghai1.sav.lua", 0);
+        w.sdata.easy_if = true;
+        w.sdata.xls_if = false;
+        QMetaObject::invokeMethod(&w, "on_sync_all_data_clicked");
+        r.nt(QString("dialogs=%1 success=%2").arg(g_dialogs.size()).arg(hasDialog(QString::fromUtf8("时刻表已成功导入"))));
+    });
+
+    // ============ 调试：上海-普速2 各组合复现（用户反馈） ============
+    runCase("S3_ls2_combos", [&](CR& r) {
+        if(!QDir(LS2).exists()) { r.nt("LS2 source not present, skipped"); return; }
+        struct Cfg { const char* name; bool easy; bool xls; int clear; bool invalid; bool pile; int dver; };
+        std::vector<Cfg> cfgs = {
+            {"list_clear1", false, true, 1, false, false, 0},
+            {"list_clear2", false, true, 2, false, false, 0},
+            {"list_clear3", false, true, 3, false, false, 0},
+            {"list_invalid", false, true, 1, true, false, 0},
+            {"list_pile", false, true, 1, false, true, 0},
+            {"list_dver1", false, true, 1, false, false, 1},
+            {"easy_xlsx", true, true, 1, false, false, 0},
+        };
+        for (const auto& c : cfgs)
+        {
+            QString dir = newCaseDir(QString("S3_") + QString::fromUtf8(c.name));
+            if(!cpDir(LS2, dir)) { r.ck(false, "copy ls2 src"); return; }
+            QDir::setCurrent(dir);
+            g_dialogs.clear();
+            mainui w;
+            baseSetup(w, dir, "shanghai1.sav", dir + "/shanghai1.sav.lua", c.dver);
+            w.sdata.easy_if = c.easy;
+            w.sdata.xls_if = c.xls;
+            w.sdata.clear_if = c.clear;
+            w.sdata.invalid_if = c.invalid;
+            w.sdata.pile_if = c.pile;
+            QMetaObject::invokeMethod(&w, "on_sync_all_data_clicked");
+            bool ok = hasDialog(QString::fromUtf8("时刻表已成功导入"));
+            QString msg = QString("%1: success=%2 dialogs=%3").arg(QString::fromUtf8(c.name)).arg(ok).arg(g_dialogs.size());
+            for(const auto& d : g_dialogs)
+                if(d.contains(QString::fromUtf8("错误")))
+                    msg += "\n      [ERR] " + QString(d).left(300).replace("\n", " | ");
+            r.nt(msg);
+        }
+    });
+
+    // 诊断：找出列表对应表单里“B 单元格存在但值为空”的异常行
+    runCase("S4_diag_sheets", [&](CR& r) {
+        QString dir = newCaseDir("S4_diag_sheets");
+        if(!QDir(LS2).exists()) { r.nt("LS2 source not present, skipped"); return; }
+        if(!cpDir(LS2, dir)) { r.ck(false, "copy ls2 src"); return; }
+        QDir::setCurrent(dir);
+        mainui w;
+        baseSetup(w, dir, "shanghai1.sav", dir + "/shanghai1.sav.lua", 0);
+        w.sdata.easy_if = false;
+        w.sdata.xls_if = true;
+        std::vector<std::pair<QString, QString>> sheetRefs;
+        {
+            QXlsx::Document lst(dir + "/shanghai1.sav_list.xlsx");
+            for(int i = 2;; ++i)
+            {
+                QVariant ln = lst.read(i, 1);
+                if(ln.isNull() || ln.toString().trimmed().isEmpty())
+                    break;
+                QVariant fv = lst.read(i, 2);
+                QVariant sv = lst.read(i, 3);
+                sheetRefs.push_back({stq(dir.toStdString()) + "/" + fv.toString().trimmed(),
+                                     sv.toString().trimmed()});
+            }
+        }
+        int groups = 0, found = 0;
+        for(auto& fs2 : sheetRefs)
+        {
+            if(fs2.first.isEmpty() || fs2.second.isEmpty())
+                continue;
+            ++groups;
+            QXlsx::Document doc(fs2.first);
+            QString actual = fs2.second;
+            for(const auto& p : doc.sheetNames())
+                if(p.trimmed() == fs2.second)
+                {
+                    actual = p;
+                    break;
+                }
+            doc.selectSheet(actual);
+            QString prevStation;
+            for(int i = 1; i < 500; ++i)
+            {
+                auto st = doc.cellAt(i, 2);
+                auto arrt = doc.cellAt(i, 3);
+                auto dept = doc.cellAt(i, 4);
+                if(!st || !arrt || !dept)
+                    break;
+                QVariant sta = st->value();
+                QVariant n2 = doc.read(i + 1, 2);
+                QVariant n3 = doc.read(i + 1, 3);
+                bool brk = (n2.isNull() || n2.toString().trimmed().isEmpty()) &&
+                           (n3.isNull() || n3.toString().trimmed().isEmpty());
+                if(brk)
+                    break;
+                if(sta.toString().trimmed().isEmpty())
+                {
+                    ++found;
+                    r.nt(QString("FAIL sheet=%1 row=%2 prevRowStation=[%3]")
+                         .arg(fs2.second).arg(i).arg(prevStation.left(20)));
+                    r.nt(QString("     n2.isNull=%1 n2=[%2] n2type=%3 | n3.isNull=%4 n3=[%5] n3type=%6")
+                         .arg(n2.isNull()).arg(n2.toString().left(30))
+                         .arg(QString::fromUtf8(n2.typeName() ? n2.typeName() : "?"))
+                         .arg(n3.isNull()).arg(n3.toString().left(30))
+                         .arg(QString::fromUtf8(n3.typeName() ? n3.typeName() : "?")));
+                    // 再看停在这一行时，正常模式（无 invalid）会怎么走
+                    break;
+                }
+                prevStation = sta.toString();
+                if(found >= 25)
+                    break;
+            }
+            if(found >= 25)
+                break;
+        }
+        r.nt(QString("list groups=%1 failRows=%2").arg(groups).arg(found));
+    });
+
+    // 用户反馈复现：表单末尾有“站点列为空、时间列残留 0:00:00”的单元格行 + 勾选忽略最后一行
+    runCase("T24_tpf2_xlsx_empty_tail_row", [&](CR& r) {
+        QString dir = newCaseDir("T24_tpf2_xlsx_empty_tail_row");
+        QDir::setCurrent(dir);
+        mkTpf2Synth(dir);
+        {
+            QXlsx::Document x;
+            const QString st[4] = {QStringLiteral("上海"), QStringLiteral("苏州"),
+                                   QStringLiteral("无锡"), QStringLiteral("常州")};
+            const int am[4] = {5, 15, 25, 35};
+            for(int i = 0; i < 4; ++i)
+            {
+                x.write(i + 1, 1, i + 1);
+                x.write(i + 1, 2, st[i]);
+                x.write(i + 1, 3, QDateTime(QDate(1980, 1, 1), QTime(0, am[i], 0)));
+                x.write(i + 1, 4, QDateTime(QDate(1980, 1, 1), QTime(0, am[i] + 1, 0)));
+            }
+            // 清空残留行：站点为空字符串，时间列还有 0 值
+            x.write(5, 2, QString());
+            x.write(5, 3, QDateTime(QDate(1980, 1, 1), QTime(0, 0, 0)));
+            x.write(5, 4, QDateTime(QDate(1980, 1, 1), QTime(0, 0, 0)));
+            x.saveAs(dir + "/G1.xlsx");
+        }
+        int counts[2] = {-1, -1};
+        for(int k = 0; k < 2; ++k)
+        {
+            QString d2 = dir + (k == 0 ? "/a" : "/b");
+            QDir().mkpath(d2);
+            cpDir(dir, d2);
+            QDir::setCurrent(d2);
+            g_dialogs.clear();
+            mainui w;
+            baseSetup(w, d2, "test.sav", d2 + "/test.sav.lua", 0);
+            w.sdata.xls_if = true;
+            w.sdata.invalid_if = (k == 1);
+            QMetaObject::invokeMethod(&w, "on_sync_all_data_clicked");
+            bool ok = hasDialog(QString::fromUtf8("时刻表已成功导入"));
+            bool missing = hasDialog(QString::fromUtf8("站点不存在"));
+            r.ck(ok, QString("invalid_%1: success").arg(k == 0 ? "off" : "on"));
+            r.ck(!missing, QString("invalid_%1: no empty-name station dialog").arg(k == 0 ? "off" : "on"));
+            QByteArray after = rd(d2 + "/test.sav.lua");
+            bool f = false;
+            std::string e1 = entryOf(after, 1, f);
+            counts[k] = f ? countMatches(QString::fromStdString(e1), "stationID") : -1;
+        }
+        r.nt(QString("empty tail row: invalid_off=%1 invalid_on=%2 (expect 4 / 3)").arg(counts[0]).arg(counts[1]));
+        r.ck(counts[0] == 4, "invalid off keeps 4");
+        r.ck(counts[1] == 3, "invalid on drops last (3)");
+    });
+
+    // 换根目录后自动找回二代存档
+    runCase("T25_tpf2_save_autopick", [&](CR& r) {
+        QString dir = newCaseDir("T25_tpf2_save_autopick");
+        QDir::setCurrent(dir);
+        mkTpf2Synth(dir);   // test.sav.lua + test.sav_station/_line/_list.xlsx
+        fs::path pick;
+        // 1) 按原存档名找回
+        r.ck(find_tpf2_save(fs::u8path(qs2s(dir)), "test.sav", pick), "find by same name");
+        r.ck(pick.filename() == fs::u8path("test.sav.lua"), "picked test.sav.lua");
+        // 2) 名字对不上时，唯一带配套文件的 lua
+        fs::path pick2;
+        r.ck(find_tpf2_save(fs::u8path(qs2s(dir)), "other.sav", pick2), "find by companion");
+        r.ck(pick2 == pick, "same pick");
+        // 3) 空目录找不到
+        QString empty = dir + "/empty";
+        QDir().mkpath(empty);
+        fs::path pick3;
+        r.ck(!find_tpf2_save(fs::u8path(qs2s(empty)), "", pick3), "none in empty dir");
     });
 
     // ---------------- data_add ----------------

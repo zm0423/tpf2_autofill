@@ -382,6 +382,21 @@ bool write_to_lua(const std::filesystem::path& filename,
                 inner = "\n" + inner;
             text.insert(at, inner);
         }
+        else
+        {
+            // 只清空、没有新数据：写入“空时刻表”标记，而不是把条目删成空表。
+            // 1.3-1.5 的代码只要条目存在就会直接索引/迭代表里的 .stations（pairs/#），
+            // 缺字段会在游戏内报 Lua 错误、表现为“清空不生效”；
+            // hasTimetable = false + stations = { } 与游戏内手动清空（取消勾选）后的结构一致。
+            // 其它版本（如“时刻表&运行图”）对空表有容错，不受影响。
+            std::string inner = "\t\t\t\thasTimetable = false,\n\t\t\t\tstations = { },\n";
+            size_t at = bodyEnd;
+            while(at > bodyStart && text[at - 1] != '\n')
+                --at;
+            if(at == bodyStart)
+                inner = "\n" + inner;
+            text.insert(at, inner);
+        }
     }
 
     // 存档中不存在的线路，插入新条目
@@ -998,6 +1013,55 @@ void refresh_file(const my_data &sdata)
     file << sdata.tpf2_sg_dir.u8string() << '\n';
 
     file.close();
+}
+
+
+bool find_tpf2_save(const std::filesystem::path& folder,
+                    const std::string& preferName,
+                    std::filesystem::path& outPath)
+{
+    outPath.clear();
+    std::error_code ec;
+
+    // 1) 优先按原存档名（同名 .lua）
+    if(!preferName.empty())
+    {
+        fs::path cand = folder / fs::u8path(preferName + ".lua");
+        if(fs::exists(cand, ec))
+        {
+            outPath = cand;
+            return true;
+        }
+    }
+
+    // 2) 目录里唯一一个带 _station/_line 配套文件的 .lua；退而求其次：唯一一个 .lua
+    std::vector<fs::path> luaFiles;
+    std::vector<fs::path> withCompanion;
+    fs::directory_iterator it(folder, ec), end;
+    if(ec)
+        return false;
+    for(; it != end; it.increment(ec))
+    {
+        if(ec)
+            break;
+        std::error_code ec2;
+        if(!it->is_regular_file(ec2) || ec2)
+            continue;
+        fs::path p = it->path();
+        if(p.extension() != fs::u8path(".lua"))
+            continue;
+        luaFiles.push_back(p);
+        std::string stem = p.stem().u8string();
+        if(fs::exists(folder / fs::u8path(stem + "_station.xlsx"), ec2) ||
+           fs::exists(folder / fs::u8path(stem + "_line.xlsx"), ec2))
+            withCompanion.push_back(p);
+    }
+
+    if(withCompanion.size() == 1)
+        outPath = withCompanion.front();
+    else if(withCompanion.empty() && luaFiles.size() == 1)
+        outPath = luaFiles.front();
+    return !outPath.empty();
 }
 
 

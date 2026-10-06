@@ -669,6 +669,56 @@ void mainui::poll_bridge_probe()
 }
 
 
+// 列表文件缺失时生成（二代：<存档名>_list.xlsx；三代：tpf3_timetable_list.xlsx）
+bool mainui::ensure_list_file()
+{
+    if(sdata.folder_dir.empty() || sdata.sg_name.empty())
+        return false;
+
+    fs::path listPath = sdata.folder_dir / fs::u8path(sdata.sg_name + "_list.xlsx");
+    std::error_code ec;
+    if(fs::exists(listPath, ec))
+        return false;
+
+    QXlsx::Document doc;
+    QXlsx::Format songTi20;
+    songTi20.setFontName(tr("宋体"));
+    songTi20.setFontSize(20);
+
+    doc.currentWorksheet()->setColumnFormat(1, 6, songTi20);
+
+    doc.write(1, 1, tr("线路"));
+    doc.write(1, 2, tr("文件1"));
+    doc.write(1, 3, tr("表单名称"));
+    doc.write(1, 4, tr("文件2"));
+    doc.write(1, 5, tr("表单名称"));
+    doc.write(1, 6, tr("..."));
+
+    doc.saveAs(stq(listPath.u8string()));
+
+    QString q = tr("未检测到列表文件，已自动生成") + stq(listPath.u8string());
+    q += tr("，如采用列表模式请编辑该文件\n格式见文档，每行一个线路，如有更多文件请向后加。"
+         "对于文件中的某些表单，请以空格分隔。"
+         "如果需要一个文件里的所有表单请空置“表单名称”栏目，第一行仅做说明，可随意更改。");
+    display_info(tr("提示"), std::move(q));
+    return true;
+}
+
+// 换了根目录后在新目录里自动找回二代存档（二代的站点/线路/列表文件都带存档名前缀）
+bool mainui::auto_pick_tpf2_save(const fs::path& folder, const std::string& preferName)
+{
+    fs::path pick;
+    if(!find_tpf2_save(folder, preferName, pick))
+        return false;
+
+    sdata.sg_dir = pick;
+    sdata.sg_name = pick.stem().u8string();
+    sdata.sys_save_dir = folder;
+    sdata.tpf2_sg_dir = pick;
+    return true;
+}
+
+
 bool mainui::get_folder()
 {
     display_info(tr("选择目录"), tr("请选取所有数据文件的根目录，即保存所有时刻表文件的目录。随后的车站和线路编号信息也都会存放于此"));
@@ -686,6 +736,7 @@ bool mainui::get_folder()
 
     const int keep_version = sdata.d_version;
     const int keep_cycle = sdata.cycle_index;
+    const std::string prev_sg_name = sdata.sg_name;   // 二代：换目录后优先按原存档名找回
 
     sdata = {};
 
@@ -699,30 +750,24 @@ bool mainui::get_folder()
         // 三代没有“选存档”这一步：换完根目录后在这里完成数据目录检测，
         // 并按二代“选完存档”的习惯生成列表文件
         ensure_tpf3_dir();
-        if(!sdata.sg_name.empty() &&
-           !fs::exists(sdata.folder_dir / fs::u8path(sdata.sg_name + "_list.xlsx")))
+        ensure_list_file();
+    }
+    else
+    {
+        // 二代：换根目录后自动在新目录里找回存档。
+        // 二代的站点/线路/列表文件都带存档名前缀（<存档名>_station/_line/_list），
+        // 找不回存档就会表现为“列表模式未发现列表”、站点线路识别不到
+        if(auto_pick_tpf2_save(folder, prev_sg_name))
         {
-            QXlsx::Document doc;
-            QXlsx::Format songTi20;
-            songTi20.setFontName(tr("宋体"));
-            songTi20.setFontSize(20);
-
-            doc.currentWorksheet()->setColumnFormat(1, 6, songTi20);
-
-            doc.write(1, 1, tr("线路"));
-            doc.write(1, 2, tr("文件1"));
-            doc.write(1, 3, tr("表单名称"));
-            doc.write(1, 4, tr("文件2"));
-            doc.write(1, 5, tr("表单名称"));
-            doc.write(1, 6, tr("..."));
-
-            doc.saveAs(stq((sdata.folder_dir / fs::u8path(sdata.sg_name + "_list.xlsx")).u8string()));
-
-            QString q = tr("未检测到列表文件，已自动生成") + stq((sdata.folder_dir / fs::u8path(sdata.sg_name + "_list.xlsx")).u8string());
-            q += tr("，如采用列表模式请编辑该文件\n格式见文档，每行一个线路，如有更多文件请向后加。"
-                 "对于文件中的某些表单，请以空格分隔。"
-                 "如果需要一个文件里的所有表单请空置“表单名称”栏目，第一行仅做说明，可随意更改。");
-            display_info(tr("提示"), std::move(q));
+            ensure_list_file();
+            read_station_line();
+        }
+        else
+        {
+            display_info(tr("提示"),
+                         tr("已切换根目录，但未能在新目录下自动找到存档文件。\n"
+                            "请点击“更改存档”选择新目录下的存档（xxx.lua），"
+                            "否则列表 / 站点 / 线路数据都无法正确读取。"));
         }
     }
 
@@ -1389,20 +1434,22 @@ bool mainui::get_data(std::vector<std::pair<int, std::vector<std::pair<QString, 
                     QVariant arrtime = arrt->dateTime();
                     QVariant deptime = dept->dateTime();
 
+                    // 本行有效性：站点或到发时间为空 → 视为表格结束（两种模式都要先查，
+                    // 否则空行会带着空站名进入匹配，报出没有站名的“站点不存在”）
+                    if(sta.isNull() || sta.toString().trimmed().isEmpty() ||
+                       arrtime.isNull() || arrtime.toString().trimmed().isEmpty() ||
+                       deptime.isNull() || deptime.toString().trimmed().isEmpty() )
+                        break;
+
                     if(sdata.invalid_if)
                     {
-                        // 末行校验：看下一行的第 2、3 列；都为空说明表格到此结束，
-                        // 当前行（最后一行数据，通常是排图回起点的站）不录入
+                        // 末行校验：下一行的站点列为空说明表格到此结束，
+                        // 当前行（最后一行数据，通常是排图回起点的站）不录入。
+                        // 只看站点列：清空后残留的“时间 0:00:00”单元格会让“2、3 列都为空”判断失效
                         QVariant n2 = doc->read(i + 1, 2);
-                        QVariant n3 = doc->read(i + 1, 3);
-                        if((n2.isNull() || n2.toString().trimmed().isEmpty()) &&
-                           (n3.isNull() || n3.toString().trimmed().isEmpty()))
+                        if(n2.isNull() || n2.toString().trimmed().isEmpty())
                             break;
                     }
-                    else if(sta.isNull() || sta.toString().trimmed().isEmpty() ||
-                            arrtime.isNull() || arrtime.toString().trimmed().isEmpty() ||
-                            deptime.isNull() || deptime.toString().trimmed().isEmpty() )
-                        break;
 
                     if(sdata.station.count(sta.toString().trimmed().toUtf8().toStdString()) > 1)
                     {

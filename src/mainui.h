@@ -50,6 +50,8 @@ private:
     bool get_folder();
     bool get_sg();
     void ensure_tpf3_dir();
+    bool ensure_list_file();             // 列表文件缺失时生成（返回是否新建）
+    bool auto_pick_tpf2_save(const std::filesystem::path& folder, const std::string& preferName);  // 换根目录后自动找回二代存档
     void start_bridge_probe(bool silent = false);
     void poll_bridge_probe();
     void read_station_line();
