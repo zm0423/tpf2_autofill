@@ -617,7 +617,7 @@ mod可在创意工坊内找到，GitHub上也有备份
     <message>
         <location filename="ui/mainui.ui" line="14"/>
         <source>mainui</source>
-        <translation>狂热运输2/3 时刻表自动输入 V2.0</translation>
+        <translation>狂热运输2/3 时刻表自动输入 V2.1</translation>
     </message>
     <message>
         <location filename="ui/mainui.ui" line="413"/>
@@ -1178,8 +1178,8 @@ C:\Program Files (x86)\Steam\userdata\&lt;你的ID&gt;\3493540\local\tpf3_timeta
     </message>
     <message>
         <location filename="src/mainui.cpp" line="65"/>
-        <source> V2.0</source>
-        <translation> V2.0</translation>
+        <source> V2.1</source>
+        <translation> V2.1</translation>
     </message>
     <message>
         <location filename="src/mainui.cpp" line="1041"/>

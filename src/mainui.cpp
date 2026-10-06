@@ -62,7 +62,7 @@ mainui::mainui(QWidget *parent)
     m_clearGroup->addButton(ui->clear_1, 1);
     m_clearGroup->addButton(ui->clear_2, 2);
     m_clearGroup->addButton(ui->clear_3, 3);
-    setWindowTitle(tr("狂热运输2/3 时刻表自动输入") + tr(" V2.0"));
+    setWindowTitle(tr("狂热运输2/3 时刻表自动输入") + tr(" V2.1"));
 
     QObject::connect(m_easyGroup, &QButtonGroup::idClicked,
                      this, [&](int p) {
@@ -1807,7 +1807,7 @@ void mainui::on_settinginfo_2_clicked()
 {
     QMessageBox msgBox;
     msgBox.setTextFormat(Qt::RichText);
-    msgBox.setText("Version 2.0<br/>" +
+    msgBox.setText("Version 2.1<br/>" +
         QString(QObject::tr("作者：今天学高代了吗<br/>"
                                        "b站视频教程：<a href=\"https://www.bilibili.com/video/BV1xxaZ6WE2E\">"
                                        "https://www.bilibili.com/video/BV1xxaZ6WE2E</a> <br/>"
@@ -1851,7 +1851,7 @@ void mainui::onLanguageChanged()
     updateLanguageButton();
     ui->retranslateUi(this);
     // retranslateUi 会用翻译文件里的旧窗口标题覆盖构造函数里设置的标题，这里补回
-    setWindowTitle(tr("狂热运输2/3 时刻表自动输入") + tr(" V2.0"));
+    setWindowTitle(tr("狂热运输2/3 时刻表自动输入") + tr(" V2.1"));
     refresh();
 }
 
