@@ -1132,6 +1132,15 @@ void read_id_data(const std::filesystem::path& filePath,
 
 // ========== 狂热运输3（TPF3 桥接） ==========
 
+const char* const TPF3_BRIDGE_DIR_NAME = "towns_industries";
+const char* const TPF3_BRIDGE_PREFIX = "tpf3_timetable_bridge_";
+
+std::filesystem::path tpf3_bridge_file(const std::filesystem::path& exchange_dir,
+                                       const std::string& base)
+{
+    return exchange_dir / fs::u8path(std::string(TPF3_BRIDGE_PREFIX) + base + ".lua");
+}
+
 int cycle_sec_from_index(int index)
 {
     static const int presets[6] = {3600, 7200, 10800, 21600, 43200, 86400};
@@ -1300,7 +1309,9 @@ namespace
 
 bool write_probe_file(const std::filesystem::path& dir, const std::string& token)
 {
-    std::ofstream out(dir / fs::path("probe.lua"), std::ios::binary | std::ios::trunc);
+    std::error_code ec;
+    fs::create_directories(dir, ec);
+    std::ofstream out(tpf3_bridge_file(dir, "probe"), std::ios::binary | std::ios::trunc);
     if(!out)
         return false;
     out << "function data()\nreturn {\n\ttoken = \"" << lua_escape(token) << "\",\n}\nend\n";
@@ -1356,7 +1367,7 @@ bool read_probe_result(const std::filesystem::path& file, std::string& token,
 bool write_data_lua(const my_data& sdata,
                     const std::vector<std::pair<int, std::vector<stationinfo>>>& data)
 {
-    const fs::path exportFile = sdata.sg_dir / fs::path("export.lua");
+    const fs::path exportFile = tpf3_bridge_file(sdata.sg_dir, "export");
 
     export_info info;
     if(!read_export_file(exportFile, info))
@@ -1481,7 +1492,11 @@ bool write_data_lua(const my_data& sdata,
     }
     oss << "\t},\n}\nend\n";
 
-    const fs::path outFile = sdata.sg_dir / fs::path("data.lua");
+    const fs::path outFile = tpf3_bridge_file(sdata.sg_dir, "data");
+    {
+        std::error_code ec;
+        fs::create_directories(sdata.sg_dir, ec);
+    }
     std::ofstream out(outFile, std::ios::binary | std::ios::trunc);
     if(!out)
     {

@@ -25,6 +25,10 @@ bool find_next_entry(const std::string& text, size_t start, size_t end,
                      bool& quotedKey);
 size_t find_entry_end(const std::string& text, size_t bodyStart);
 
+// mainui.cpp 内部函数（非 static）——复用于测试（userdata 根列表 → 桥接目录）
+std::vector<std::pair<std::string, std::filesystem::path>> find_bridge_candidates_in(
+    const std::vector<std::filesystem::path>& roots);
+
 namespace fs = std::filesystem;
 
 static QString g_work;
@@ -250,7 +254,7 @@ static void mkTpf3(const QString& dir, int cycleSec = 7200)
     ex += "\t\tsaveId = \"timetable test\",\n";
     ex += "\t\tstations = { \n\t\t\t[\"10\"] = \"上海\",\n\t\t\t[\"20\"] = \"苏州\",\n\t\t\t[\"30\"] = \"无锡\",\n\t\t},\n";
     ex += "\t}\nend\n";
-    wr(dir + "/export.lua", ex.toUtf8());
+    wr(dir + "/tpf3_timetable_bridge_export.lua", ex.toUtf8());
     writeNameIdXlsx(dir + "/tpf3_timetable_station.xlsx", {{QStringLiteral("上海"), 10}, {QStringLiteral("苏州"), 20}, {QStringLiteral("无锡"), 30}});
     writeNameIdXlsx(dir + "/tpf3_timetable_line.xlsx", {{QStringLiteral("G1"), 1}, {QStringLiteral("1461"), 2}});
     writeListXlsx(dir + "/tpf3_timetable_list.xlsx", {});
@@ -460,7 +464,7 @@ int main(int argc, char** argv)
         QDir::setCurrent(dir);
         mkTpf3(dir);
         export_info info;
-        bool ok = read_export_file(fs::u8path(qs2s(dir + "/export.lua")), info);
+        bool ok = read_export_file(fs::u8path(qs2s(dir + "/tpf3_timetable_bridge_export.lua")), info);
         r.ck(ok, "read_export_file ok");
         r.ck(info.stations.size() == 3, QString("stations=%1").arg(info.stations.size()));
         r.ck(info.lines.size() == 2, QString("lines=%1").arg(info.lines.size()));
@@ -480,7 +484,7 @@ int main(int argc, char** argv)
         baseSetup(w, dir, "tpf3_timetable", dir, 2);
         QMetaObject::invokeMethod(&w, "on_sync_all_data_clicked");
         r.ck(hasDialog(QString::fromUtf8("时刻表数据已生成")), "success dialog");
-        QString t = rdQ(dir + "/data.lua");
+        QString t = rdQ(dir + "/tpf3_timetable_bridge_data.lua");
         r.ck(!t.isEmpty(), "data.lua exists");
         r.ck(t.contains("cycleSec = 7200"), "cycleSec=7200");
         r.ck(t.contains("force = false"), "force=false");
@@ -498,13 +502,13 @@ int main(int argc, char** argv)
         QDir::setCurrent(dir);
         mkTpf3(dir);
         t1Csvs(dir);
-        QFile::remove(dir + "/data.lua");
+        QFile::remove(dir + "/tpf3_timetable_bridge_data.lua");
         mainui w;
         baseSetup(w, dir, "tpf3_timetable", dir, 2);
         w.sdata.cycle_index = 0;   // 1h，1:05 越界
         QMetaObject::invokeMethod(&w, "on_sync_all_data_clicked");
         r.ck(hasDialog(QString::fromUtf8("时刻表超出所选周期范围")), "over-cycle dialog");
-        r.ck(!QFile::exists(dir + "/data.lua"), "data.lua not written");
+        r.ck(!QFile::exists(dir + "/tpf3_timetable_bridge_data.lua"), "data file not written");
     });
 
     runCase("T3_tpf3_stop_missing", [&](CR& r) {
@@ -522,7 +526,7 @@ int main(int argc, char** argv)
         baseSetup(w, dir, "tpf3_timetable", dir, 2);
         QMetaObject::invokeMethod(&w, "on_sync_all_data_clicked");
         r.ck(hasDialog(QString::fromUtf8("与游戏存档数据不一致")), "EXPORT_MISMATCH dialog");
-        r.ck(!QFile::exists(dir + "/data.lua"), "data.lua not written");
+        r.ck(!QFile::exists(dir + "/tpf3_timetable_bridge_data.lua"), "data file not written");
     });
 
     runCase("T4_tpf3_stop_order", [&](CR& r) {
@@ -566,7 +570,7 @@ int main(int argc, char** argv)
         w.sdata.clear_if = 2;
         QMetaObject::invokeMethod(&w, "on_sync_all_data_clicked");
         r.ck(hasDialog(QString::fromUtf8("时刻表数据已生成")), "success dialog");
-        QString t = rdQ(dir + "/data.lua");
+        QString t = rdQ(dir + "/tpf3_timetable_bridge_data.lua");
         r.ck(t.contains("clearLines = {"), "clearLines present");
         r.ck(t.contains(QString::fromUtf8("\"G1/2 上海-无锡\"")), "clearLines G1 full name");
         r.ck(t.contains(QString::fromUtf8("\"1461/2 上海-苏州\"")), "clearLines 1461 full name");
@@ -582,7 +586,7 @@ int main(int argc, char** argv)
         w.sdata.clear_if = 3;
         QMetaObject::invokeMethod(&w, "on_sync_all_data_clicked");
         r.ck(hasDialog(QString::fromUtf8("时刻表数据已生成")), "success dialog");
-        QString t = rdQ(dir + "/data.lua");
+        QString t = rdQ(dir + "/tpf3_timetable_bridge_data.lua");
         r.ck(t.contains("clearAll = true"), "clearAll=true");
     });
 
@@ -604,7 +608,7 @@ int main(int argc, char** argv)
         w.sdata.xls_if = true;
         QMetaObject::invokeMethod(&w, "on_sync_all_data_clicked");
         r.ck(hasDialog(QString::fromUtf8("时刻表数据已生成")), "success dialog");
-        QString t = rdQ(dir + "/data.lua");
+        QString t = rdQ(dir + "/tpf3_timetable_bridge_data.lua");
         r.ck(t.contains("{ arrMin = 65, arrSec = 0, depMin = 66, depSec = 0 }"), "xlsx 1:05 -> arrMin 65 (TPF3 hour)");
     });
 
@@ -631,7 +635,7 @@ int main(int argc, char** argv)
         w.sdata.xls_if = true;
         QMetaObject::invokeMethod(&w, "on_sync_all_data_clicked");
         r.ck(hasDialog(QString::fromUtf8("时刻表数据已生成")), "success dialog");
-        QString t = rdQ(dir + "/data.lua");
+        QString t = rdQ(dir + "/tpf3_timetable_bridge_data.lua");
         r.ck(t.contains("{ arrMin = 65, arrSec = 0, depMin = 66, depSec = 0 }"), "list sheet G1 1:05->65");
         r.ck(t.contains("{ arrMin = 60, arrSec = 0, depMin = 61, depSec = 0 }"), "list sheet 1461 1:00->60");
     });
@@ -652,7 +656,7 @@ int main(int argc, char** argv)
         w.sdata.pile_if = true;
         QMetaObject::invokeMethod(&w, "on_sync_all_data_clicked");
         r.ck(hasDialog(QString::fromUtf8("时刻表数据已生成")), "success dialog");
-        QString t = rdQ(dir + "/data.lua");
+        QString t = rdQ(dir + "/tpf3_timetable_bridge_data.lua");
         r.ck(t.contains("{ index = 1, slots = {") && t.contains("{ index = 2, slots = {"), "2 stops");
         r.ck(countMatches(t, "arrMin") == 4, QString("4 slots (2x2), got %1").arg(countMatches(t, "arrMin")));
     });
@@ -670,7 +674,7 @@ int main(int argc, char** argv)
         baseSetup(w, dir, "tpf3_timetable", dir, 2);
         QMetaObject::invokeMethod(&w, "on_sync_all_data_clicked");
         r.ck(hasDialog(QString::fromUtf8("时刻表数据已生成")), "success dialog");
-        QString t = rdQ(dir + "/data.lua");
+        QString t = rdQ(dir + "/tpf3_timetable_bridge_data.lua");
         r.ck(t.contains("{ arrMin = 119, arrSec = 30, depMin = 119, depSec = 40 }"), "boundary 1:59:30 ok");
     });
 
@@ -1500,6 +1504,42 @@ int main(int argc, char** argv)
         QDir().mkpath(empty);
         fs::path pick3;
         r.ck(!find_tpf2_save(fs::u8path(qs2s(empty)), "", pick3), "none in empty dir");
+    });
+
+    // 三代桥接目录检测：按 userdata 根列表扫描（模拟 Steam 装在 D 盘、目录名自定义的情况）
+    runCase("T26_tpf3_bridge_scan", [&](CR& r) {
+        QString dir = newCaseDir("T26_tpf3_bridge_scan");
+        QDir::setCurrent(dir);
+        QString root = dir + "/D_SteamLibrary/userdata";
+        QDir().mkpath(root + "/111/3493540/local/towns_industries");
+        QDir().mkpath(root + "/222/3493540/local/towns_industries");
+        QDir().mkpath(root + "/333/3493540/local/towns_industries");   // 目录存在但没有桥接文件
+        wr(root + "/111/3493540/local/towns_industries/tpf3_timetable_bridge_export.lua", QByteArray("return {}\n"));
+        wr(root + "/222/3493540/local/towns_industries/tpf3_timetable_bridge_export.lua", QByteArray("return {}\n"));
+        std::vector<fs::path> roots{ fs::u8path(qs2s(root)) };
+        auto found = find_bridge_candidates_in(roots);
+        r.nt(QString("found=%1").arg(found.size()));
+        r.ck(found.size() == 2, "2 bridge candidates");
+        bool got111 = false, got222 = false;
+        for(const auto& p : found)
+        {
+            if(p.first == "111") got111 = true;
+            if(p.first == "222") got222 = true;
+            r.ck(p.second.filename() == fs::u8path("towns_industries"), "candidate path is towns_industries");
+        }
+        r.ck(got111 && got222, "accounts 111/222 found");
+        std::vector<fs::path> dupRoots{ fs::u8path(qs2s(root)), fs::u8path(qs2s(root)) };
+        r.ck(find_bridge_candidates_in(dupRoots).size() == 2, "repeated roots deduped");
+        std::vector<fs::path> none{ fs::u8path(qs2s(dir + "/no_such_root")) };
+        r.ck(find_bridge_candidates_in(none).empty(), "missing root skipped");
+        // 本机真实 userdata（存在才记录）：验证默认安装位置能被扫到
+        std::vector<fs::path> realRoots{ fs::u8path("C:/Program Files (x86)/Steam/userdata") };
+        std::error_code ec;
+        if(fs::is_directory(realRoots[0], ec))
+        {
+            auto real = find_bridge_candidates_in(realRoots);
+            r.nt(QString("real C: userdata bridge candidates: %1").arg(real.size()));
+        }
     });
 
     // ---------------- data_add ----------------

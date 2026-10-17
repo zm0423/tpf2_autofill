@@ -10,6 +10,8 @@
 #include <QPushButton>
 #include <QFileDialog>
 #include <QStandardPaths>
+#include <QDir>
+#include <QSettings>
 #include <fstream>
 #include <sstream>
 #include <unordered_set>
@@ -62,7 +64,7 @@ mainui::mainui(QWidget *parent)
     m_clearGroup->addButton(ui->clear_1, 1);
     m_clearGroup->addButton(ui->clear_2, 2);
     m_clearGroup->addButton(ui->clear_3, 3);
-    setWindowTitle(tr("狂热运输2/3 时刻表自动输入") + tr(" V2.1"));
+    setWindowTitle(tr("狂热运输2/3 时刻表自动输入") + tr(" V2.2"));
 
     QObject::connect(m_easyGroup, &QButtonGroup::idClicked,
                      this, [&](int p) {
@@ -133,11 +135,13 @@ mainui::mainui(QWidget *parent)
     QTimer::singleShot(0, this, &mainui::init);
 }
 
-// 旧版数据目录名不再使用：命中时强制重新检测
+// 旧版数据目录名不再使用：TPF3 桥接目录现在为 towns_industries，
+// 历史目录名（autofill_bridge / tpf3_autofill_bridge / tpf3_timetable_bridge）命中时强制重新检测
 static bool is_legacy_bridge_dir(const fs::path& dir)
 {
     const std::string n = dir.filename().u8string();
-    return n == "autofill_bridge" || n == "tpf3_autofill_bridge";
+    return n == "autofill_bridge" || n == "tpf3_autofill_bridge"
+        || n == "tpf3_timetable_bridge";
 }
 
 void mainui::init()
@@ -395,7 +399,7 @@ void mainui::on_sync_all_data_clicked()
 struct bridge_candidate
 {
     std::string account;   // userdata 下的账号文件夹名（Steam 账号 ID）
-    fs::path path;         // ...\userdata\<账号>\3493540\local\tpf3_timetable_bridge
+    fs::path path;         // ...\userdata\<账号>\3493540\local\towns_industries
 };
 
 static bool same_path(const fs::path& a, const fs::path& b)
@@ -404,21 +408,71 @@ static bool same_path(const fs::path& a, const fs::path& b)
     return fs::equivalent(a, b, ec);
 }
 
-// 自动定位“狂热运输3”桥接数据目录（steam userdata/<账号>/3493540/local/tpf3_timetable_bridge）
-static std::vector<bridge_candidate> collect_bridge_candidates()
+// 所有可能的 Steam userdata 根目录：
+// 1) 注册表里 Steam 的实际安装位置（userdata 就在安装目录下；装在哪个盘、目录叫什么名字都能找到，
+//    正常通过 Steam 安装包安装的都有注册表）
+// 2) 兜底：各盘符的默认安装位置 <盘>\Program Files (x86)\Steam\userdata
+static std::vector<fs::path> collect_userdata_roots()
 {
-    std::vector<bridge_candidate> out;
     std::vector<fs::path> roots;
+    auto add = [&roots](const fs::path& p) {
+        std::error_code ec;
+        if(p.empty() || !fs::is_directory(p, ec))
+            return;
+        for(const auto& o : roots)
+            if(same_path(o, p))
+                return;
+        roots.push_back(p);
+    };
+
 #ifdef _WIN32
-    const char* pf86 = std::getenv("ProgramFiles(x86)");
-    const char* pf = std::getenv("ProgramFiles");
-    if(pf86) roots.push_back(fs::path(pf86) / "Steam" / "userdata");
-    if(pf) roots.push_back(fs::path(pf) / "Steam" / "userdata");
-    roots.push_back(fs::path("C:/Program Files (x86)/Steam/userdata"));
+    // 注册表：Steam 安装目录
+    {
+        QSettings cu(QStringLiteral("HKEY_CURRENT_USER\\Software\\Valve\\Steam"),
+                     QSettings::NativeFormat);
+        const QString sp = cu.value(QStringLiteral("SteamPath")).toString();
+        if(!sp.isEmpty())
+            add(fs::u8path(sp.toStdString()) / "userdata");
+
+        QString ip;
+        QSettings lm32(QStringLiteral("HKEY_LOCAL_MACHINE\\SOFTWARE\\WOW6432Node\\Valve\\Steam"),
+                       QSettings::NativeFormat);
+        ip = lm32.value(QStringLiteral("InstallPath")).toString();
+        if(ip.isEmpty())
+        {
+            QSettings lm64(QStringLiteral("HKEY_LOCAL_MACHINE\\SOFTWARE\\Valve\\Steam"),
+                           QSettings::NativeFormat);
+            ip = lm64.value(QStringLiteral("InstallPath")).toString();
+        }
+        if(!ip.isEmpty())
+            add(fs::u8path(ip.toStdString()) / "userdata");
+    }
+
+    // 兜底：各盘符的默认安装位置
+    for(const QFileInfo& d : QDir::drives())
+        add(fs::u8path(d.absoluteFilePath().toStdString()) / "Program Files (x86)" / "Steam" / "userdata");
 #else
     const char* home = std::getenv("HOME");
-    if(home) roots.push_back(fs::path(home) / "Library/Application Support/Steam/userdata");
+    if(home)
+        add(fs::path(home) / "Library/Application Support/Steam/userdata");
 #endif
+
+    return roots;
+}
+
+// 手动选择对话框的默认起始目录：优先用检测到的 userdata 根，找不到再退回默认路径
+static QString default_userdata_root()
+{
+    const auto roots = collect_userdata_roots();
+    if(!roots.empty())
+        return stq(roots.front().u8string());
+    return QStringLiteral("C:/Program Files (x86)/Steam/userdata");
+}
+
+// 在给定的 userdata 根目录里查找桥接数据目录（非 static，供回归测试调用）
+std::vector<std::pair<std::string, fs::path>> find_bridge_candidates_in(const std::vector<fs::path>& roots)
+{
+    std::vector<std::pair<std::string, fs::path>> out;
     for(const auto& root : roots)
     {
         std::error_code ec;
@@ -428,13 +482,19 @@ static std::vector<bridge_candidate> collect_bridge_candidates()
         {
             if(ec)
                 break;
-            fs::path cand = entry.path() / "3493540" / "local" / "tpf3_timetable_bridge";
+            fs::path cand = entry.path() / "3493540" / "local" / TPF3_BRIDGE_DIR_NAME;
             std::error_code ec2;
             if(!fs::is_directory(cand, ec2))
                 continue;
+            // towns_industries 是游戏自带的公共目录：必须至少有一个桥接文件才算候选
+            const bool hasBridgeFile = fs::exists(tpf3_bridge_file(cand, "export"), ec2)
+                                    || fs::exists(tpf3_bridge_file(cand, "data"), ec2)
+                                    || fs::exists(tpf3_bridge_file(cand, "probe_result"), ec2);
+            if(!hasBridgeFile)
+                continue;
             bool dup = false;
             for(const auto& o : out)
-                if(same_path(o.path, cand))
+                if(same_path(o.second, cand))
                 {
                     dup = true;
                     break;
@@ -443,6 +503,15 @@ static std::vector<bridge_candidate> collect_bridge_candidates()
                 out.push_back({entry.path().filename().u8string(), cand});
         }
     }
+    return out;
+}
+
+// 自动定位“狂热运输3”桥接数据目录（steam userdata/<账号>/3493540/local/towns_industries）
+static std::vector<bridge_candidate> collect_bridge_candidates()
+{
+    std::vector<bridge_candidate> out;
+    for(auto& p : find_bridge_candidates_in(collect_userdata_roots()))
+        out.push_back({p.first, p.second});
     return out;
 }
 
@@ -467,7 +536,7 @@ static fs::path choose_bridge_dir(const std::string& preferred, std::string& pic
     for(size_t i = 0; i < cands.size(); ++i)
     {
         std::error_code ec;
-        auto t = fs::last_write_time(cands[i].path / fs::path("export.lua"), ec);
+        auto t = fs::last_write_time(tpf3_bridge_file(cands[i].path, "export"), ec);
         if(ec)
             continue;
         if(!hasTime || t > bestTime)
@@ -519,7 +588,8 @@ void mainui::ensure_tpf3_dir()
 
     // 自动检测失败：提示后进入手动选择
     display_info(tr("未找到数据目录"),
-                 tr("未能自动找到桥接数据目录（tpf3_timetable_bridge）。\n如果还没出现过，请先进一次游戏；现在请手动选择。"));
+                 tr("未能自动找到桥接数据目录（local\\towns_industries\\tpf3_timetable_bridge_*.lua）。\n"
+                    "请确认已安装新版桥接模组，并进入一次游戏；现在也可以手动选择 towns_industries 文件夹。"));
     get_sg();
 }
 
@@ -643,7 +713,7 @@ void mainui::poll_bridge_probe()
     std::string token;
     std::string save_id;
     int cycle_sec = 0;
-    if(read_probe_result(sdata.sg_dir / fs::path("probe_result.lua"), token, save_id, cycle_sec)
+    if(read_probe_result(tpf3_bridge_file(sdata.sg_dir, "probe_result"), token, save_id, cycle_sec)
        && token == m_probe_token.toStdString())
     {
         m_probe_timer->stop();
@@ -783,16 +853,23 @@ bool mainui::get_sg()
     if(sdata.tpf3())
     {
         display_info(tr("选择数据目录"),
-                     tr("“狂热运输3”模式下请选取桥接数据目录（tpf3_timetable_bridge），通常在：\n"
-                        "C:\\Program Files (x86)\\Steam\\userdata\\<你的ID>\\3493540\\local\\tpf3_timetable_bridge"));
+                     tr("“狂热运输3”模式下请选取桥接数据目录（towns_industries），通常在：\n"
+                        "C:\\Program Files (x86)\\Steam\\userdata\\<你的ID>\\3493540\\local\\towns_industries"));
 
         fs::path dir = fs::u8path((QFileDialog::getExistingDirectory(this,
             tr("选择目录"),
-            sdata.sg_dir.empty()? "" : QString::fromStdString(sdata.sg_dir.u8string()),
+            sdata.sg_dir.empty()? default_userdata_root() : QString::fromStdString(sdata.sg_dir.u8string()),
             QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks)).toStdString());
 
         if(dir.empty())
             return 0;
+
+        if(dir.filename().u8string() != TPF3_BRIDGE_DIR_NAME)
+        {
+            display_info(tr("目录不正确"),
+                         tr("请选择 local\\towns_industries 文件夹（桥接文件以 tpf3_timetable_bridge_ 开头）。"));
+            return 0;
+        }
 
         sdata.sg_dir = dir;
         sdata.sg_name = tpf3_work_name;
@@ -840,7 +917,7 @@ bool mainui::get_sg()
 
     fs::path sg = fs::u8path((QFileDialog::getOpenFileName(this,
     tr("打开文件"),
-    sdata.sys_save_dir.empty()? "C:\\Program Files (x86)\\Steam\\userdata" :
+    sdata.sys_save_dir.empty()? default_userdata_root() :
                                                                QString::fromStdString(sdata.sys_save_dir.u8string()),
     tr("lua文件 (*.lua);;所有文件 (*.*)"))).toStdString());
 
@@ -944,7 +1021,7 @@ void mainui::refresh()
     export_info bridgeInfo;
     bool bridgeRead = false;
     if(tpf3 && !sdata.sg_dir.empty())
-        bridgeRead = read_export_file(sdata.sg_dir / fs::path("export.lua"), bridgeInfo);
+        bridgeRead = read_export_file(tpf3_bridge_file(sdata.sg_dir, "export"), bridgeInfo);
 
     if(tpf3)
     {
@@ -1807,7 +1884,7 @@ void mainui::on_settinginfo_2_clicked()
 {
     QMessageBox msgBox;
     msgBox.setTextFormat(Qt::RichText);
-    msgBox.setText("Version 2.1<br/>" +
+    msgBox.setText("Version 2.2<br/>" +
         QString(QObject::tr("作者：今天学高代了吗<br/>"
                                        "b站视频教程：<a href=\"https://www.bilibili.com/video/BV1xxaZ6WE2E\">"
                                        "https://www.bilibili.com/video/BV1xxaZ6WE2E</a> <br/>"
@@ -1851,7 +1928,7 @@ void mainui::onLanguageChanged()
     updateLanguageButton();
     ui->retranslateUi(this);
     // retranslateUi 会用翻译文件里的旧窗口标题覆盖构造函数里设置的标题，这里补回
-    setWindowTitle(tr("狂热运输2/3 时刻表自动输入") + tr(" V2.1"));
+    setWindowTitle(tr("狂热运输2/3 时刻表自动输入") + tr(" V2.2"));
     refresh();
 }
 

@@ -84,9 +84,9 @@ void data_add::on_station_input_clicked()
     if(sdata.tpf3())
     {
         export_info info;
-        if(!read_export_file(sdata.sg_dir / fs::path("export.lua"), info))
+        if(!read_export_file(tpf3_bridge_file(sdata.sg_dir, "export"), info))
         {
-            display_info(tr("错误"), tr("未能读取 export.lua，请先启动一次游戏导出数据"));
+            display_info(tr("错误"), tr("未能读取游戏导出的数据文件，请先启动一次游戏导出数据"));
             return;
         }
         station_dat = info.stations;
@@ -100,7 +100,7 @@ void data_add::on_station_input_clicked()
     if(station_dat.empty())
     {
         display_info(tr("错误"), sdata.tpf3()
-                     ? tr("export.lua 内站点数据为空，请先启动一次游戏导出数据")
+                     ? tr("游戏导出的站点数据为空，请先启动一次游戏导出数据")
                      : tr("未找到存档内站点数据，请检查辅助mod是否安装"));
         return;
     }
@@ -164,9 +164,9 @@ void data_add::on_line_input_clicked()
     if(sdata.tpf3())
     {
         export_info info;
-        if(!read_export_file(sdata.sg_dir / fs::path("export.lua"), info))
+        if(!read_export_file(tpf3_bridge_file(sdata.sg_dir, "export"), info))
         {
-            display_info(tr("错误"), tr("未能读取 export.lua，请先启动一次游戏导出数据"));
+            display_info(tr("错误"), tr("未能读取游戏导出的数据文件，请先启动一次游戏导出数据"));
             return;
         }
         line_dat = info.lines;
@@ -179,7 +179,7 @@ void data_add::on_line_input_clicked()
     if(line_dat.empty())
     {
         display_info(tr("错误"), sdata.tpf3()
-                     ? tr("export.lua 内线路数据为空，请先启动一次游戏导出数据")
+                     ? tr("游戏导出的线路数据为空，请先启动一次游戏导出数据")
                      : tr("未找到存档内线路数据，请检查辅助mod是否安装"));
         return;
     }

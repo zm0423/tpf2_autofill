@@ -224,6 +224,16 @@ void read_id_data(const std::filesystem::path& filePath,
 
 // ========== 狂热运输3（TPF3 桥接）相关 ==========
 
+// TPF3 桥接交换目录：游戏 40420（2026-10）起脚本文件 API 只允许
+// towns_industries / biomes / heightmaps / mod_presets 四个目录。
+// 桥接统一使用 towns_industries，文件名加前缀，避免和地图编辑器数据混淆。
+extern const char* const TPF3_BRIDGE_DIR_NAME;   // "towns_industries"
+extern const char* const TPF3_BRIDGE_PREFIX;     // "tpf3_timetable_bridge_"
+
+// 返回交换目录下的桥接文件，base 为 data / export / probe / probe_result
+std::filesystem::path tpf3_bridge_file(const std::filesystem::path& exchange_dir,
+                                       const std::string& base);
+
 // export.lua 解析结果（游戏 → 工具）
 struct export_info
 {
