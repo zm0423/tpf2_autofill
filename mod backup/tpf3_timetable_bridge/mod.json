@@ -1,0 +1,22 @@
+{
+    "dependencies": [
+        {
+            "mod": {
+                "modId": "celmi_timetables",
+                "revisionMin": 8
+            },
+            "modInfo": {
+                "displayName": "Timetables"
+            },
+            "loadBefore": true,
+            "optional": false
+        }
+    ],
+    "incompatibilities": null,
+    "modId": "tpf3_timetable_bridge",
+    "revision": 2,
+    "visible": true,
+    "cosmetic": true,
+    "severityAdd": "None",
+    "severityRemove": "None"
+}

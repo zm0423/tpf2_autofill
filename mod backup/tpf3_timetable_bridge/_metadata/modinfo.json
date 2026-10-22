@@ -1,0 +1,25 @@
+{
+	"name": "Timetable AutoFill",
+	"summary": "Import timetables from external Excel/CSV files (companion desktop program required).",
+	"description": "Please UPDATE the desktop app to v2.2! Official file reading is restricted, so the previous version is not available any more!\n\nThis is NOT the Timetables mod! This is the Timetable AutoFill mod.\n\nThis mod imports timetables from external Excel/CSV files. It currently supports celmi's Timetables mod.\n\nBecause the game cannot read external data directly, a companion desktop program is required:\nhttps://github.com/zm0423/tpf2_autofill\nSee the program description for details.\n\nEntering a save automatically exports the game data once. Applying the timetable requires clicking the button in the in-game AutoFill window.",
+	"localization": {
+		"zh_CN": {
+			"name": "时刻表自动录入mod",
+			"summary": "将外部 Excel/CSV 时刻表导入游戏（需要配套辅助程序）。",
+			"description": "请更新应用程序v2.2!官方收紧了文件访问的范围，所以老版程序将不适用。\n\n这不是时刻表模组！这是时刻表自动录入模组。\n\n这个mod是用来将外部的excel和csv文件导入时刻表的，目前适配celmi的时刻表模组。\n\n因为游戏内无法直接读取外部数据，因此需要下载额外的辅助程序：\nhttps://github.com/zm0423/tpf2_autofill\n详细内容请看程序描述。\n\n也可访问b站用户“今天学高代了吗”的主页，下载或了解教程。\n\n进入存档时会自动导出一次游戏数据；应用时刻表需手动点击游戏内 AutoFill 窗口的按钮。"
+		}
+	},
+	"authors": [
+		{
+			"name": "今天学高代了吗",
+			"role": "CREATOR"
+		}
+	],
+	"tags": [
+		"Script Mod"
+	],
+	"dependencies": [
+		"6037864"
+	],
+	"url": "https://github.com/zm0423/tpf2_autofill"
+}
